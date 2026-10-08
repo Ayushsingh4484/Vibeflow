@@ -3,15 +3,48 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --bg-main: #F4F4F5;
+    --bg-surface: #FFFFFF;
+    --bg-card: #FFFFFF;
+    --bg-card-hover: #F0F0F2;
+    --border-color: #E4E4E7;
+    --text-primary: #09090B;
+    --text-secondary: #71717A;
+    --text-muted: #A1A1AA;
+    --accent-color: #EF4444;
+    --player-bg: rgba(255, 255, 255, 0.92);
+    --nav-bg: rgba(255, 255, 255, 0.90);
+  }
+
+  html.dark {
+    --bg-main: #000000;
+    --bg-surface: #0A0A0A;
+    --bg-card: #111111;
+    --bg-card-hover: #181818;
+    --border-color: #222222;
+    --text-primary: #FFFFFF;
+    --text-secondary: #A7A7A7;
+    --text-muted: #71717A;
+    --accent-color: #EF4444;
+    --player-bg: rgba(10, 10, 10, 0.92);
+    --nav-bg: rgba(10, 10, 10, 0.90);
+  }
+
   body {
-    @apply bg-[#000000] text-white font-sans overflow-hidden select-none;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
+    user-select: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 }
 
-/* Custom modern scrollbar */
+/* Custom modern scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -19,73 +52,89 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #333333;
-  border-radius: 4px;
+  background: rgba(113, 113, 122, 0.3);
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555555;
+  background: rgba(113, 113, 122, 0.5);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Glassmorphism utilities */
+.glass-panel {
+  background: var(--player-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+}
+
+.glass-nav {
+  background: var(--nav-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border-color);
 }
 
 /* Custom Audio Progress & Volume Sliders */
 input[type="range"] {
-  @apply appearance-none bg-[#4d4d4d] h-1 rounded-full cursor-pointer transition-all;
+  @apply appearance-none h-1.5 rounded-full cursor-pointer transition-all;
 }
 
 input[type="range"]::-webkit-slider-thumb {
-  @apply appearance-none w-3 h-3 bg-white rounded-full opacity-0 transition-opacity shadow-md;
+  @apply appearance-none w-3.5 h-3.5 bg-current rounded-full opacity-0 transition-all shadow-md scale-75;
 }
 
 .group:hover input[type="range"]::-webkit-slider-thumb,
 input[type="range"]:active::-webkit-slider-thumb,
 input[type="range"]:hover::-webkit-slider-thumb {
-  @apply opacity-100;
+  @apply opacity-100 scale-100;
 }
 
 input[type="range"]::-moz-range-thumb {
-  @apply w-3 h-3 bg-white border-0 rounded-full opacity-0 transition-opacity shadow-md;
+  @apply w-3.5 h-3.5 bg-current border-0 rounded-full opacity-0 transition-all shadow-md scale-75;
 }
 
 .group:hover input[type="range"]::-moz-range-thumb,
 input[type="range"]:active::-moz-range-thumb,
 input[type="range"]:hover::-moz-range-thumb {
-  @apply opacity-100;
-}
-
-/* Glassmorphism utility */
-.glass-panel {
-  background: rgba(18, 18, 18, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.glass-nav {
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  @apply opacity-100 scale-100;
 }
 
 /* Equalizer animations */
 @keyframes bar1 {
   0% { height: 4px; }
-  50% { height: 16px; }
+  50% { height: 18px; }
   100% { height: 8px; }
 }
 
 @keyframes bar2 {
-  0% { height: 14px; }
+  0% { height: 16px; }
   50% { height: 6px; }
-  100% { height: 18px; }
+  100% { height: 20px; }
 }
 
 @keyframes bar3 {
   0% { height: 8px; }
-  50% { height: 18px; }
+  50% { height: 20px; }
   100% { height: 4px; }
 }
 
 .animate-bar-1 { animation: bar1 0.8s ease-in-out infinite alternate; }
 .animate-bar-2 { animation: bar2 0.7s ease-in-out infinite alternate; }
 .animate-bar-3 { animation: bar3 0.9s ease-in-out infinite alternate; }
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spinSlow 12s linear infinite;
+}

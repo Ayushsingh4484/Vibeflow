@@ -1,47 +1,44 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Search, Library, Heart, ShieldCheck, User } from 'lucide-react';
+import { Home, Compass, Library, User, ShieldCheck } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 
 export const MobileNav: React.FC = () => {
   const { user, isAuthenticated } = useAuthStore();
 
-  const linkClass = ({ isActive }: { isActive: boolean }) =>
-    `flex flex-col items-center justify-center gap-1 py-2 flex-1 text-[11px] font-medium transition-colors ${
-      isActive ? 'text-brand-400 font-bold' : 'text-zinc-400 hover:text-white'
+  const getLinkClass = ({ isActive }: { isActive: boolean }) =>
+    `flex flex-col items-center justify-center gap-0.5 py-1.5 px-3 rounded-full text-[11px] font-semibold transition-all duration-300 ${
+      isActive
+        ? 'bg-red-500 text-white shadow-lg shadow-red-500/30 scale-105'
+        : 'text-zinc-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
     }`;
 
   return (
-    <nav className="md:hidden fixed bottom-20 inset-x-0 bg-[#121212]/95 backdrop-blur-xl border-t border-white/10 z-20 flex items-center justify-around px-2 shadow-2xl">
-      <NavLink to="/" className={linkClass}>
-        <Home className="w-5 h-5" />
-        <span>Home</span>
+    <nav className="md:hidden fixed bottom-3 inset-x-4 max-w-sm mx-auto z-40 bg-white/90 dark:bg-[#16171e]/90 backdrop-blur-2xl border border-black/5 dark:border-white/10 rounded-full p-1.5 shadow-2xl flex items-center justify-around">
+      <NavLink to="/" className={getLinkClass}>
+        <Home className="w-4 h-4" />
+        <span className="text-[10px]">Home</span>
       </NavLink>
 
-      <NavLink to="/search" className={linkClass}>
-        <Search className="w-5 h-5" />
-        <span>Search</span>
+      <NavLink to="/search" className={getLinkClass}>
+        <Compass className="w-4 h-4" />
+        <span className="text-[10px]">Browse</span>
       </NavLink>
 
-      <NavLink to="/library" className={linkClass}>
-        <Library className="w-5 h-5" />
-        <span>Library</span>
-      </NavLink>
-
-      <NavLink to="/liked" className={linkClass}>
-        <Heart className="w-5 h-5" />
-        <span>Liked</span>
+      <NavLink to="/library" className={getLinkClass}>
+        <Library className="w-4 h-4" />
+        <span className="text-[10px]">Library</span>
       </NavLink>
 
       {user?.role === 'ADMIN' ? (
-        <NavLink to="/admin" className={linkClass}>
-          <ShieldCheck className="w-5 h-5 text-emerald-400" />
-          <span className="text-emerald-400 font-bold">Admin</span>
+        <NavLink to="/admin" className={getLinkClass}>
+          <ShieldCheck className="w-4 h-4" />
+          <span className="text-[10px]">Admin</span>
         </NavLink>
       ) : (
-        <NavLink to={isAuthenticated ? '/profile' : '/login'} className={linkClass}>
-          <User className="w-5 h-5" />
-          <span>{isAuthenticated ? 'Profile' : 'Log in'}</span>
+        <NavLink to={isAuthenticated ? '/profile' : '/login'} className={getLinkClass}>
+          <User className="w-4 h-4" />
+          <span className="text-[10px]">{isAuthenticated ? 'Profile' : 'Log in'}</span>
         </NavLink>
       )}
     </nav>

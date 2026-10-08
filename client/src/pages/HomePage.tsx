@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { trackService } from '../services/trackService';
 import { albumService } from '../services/albumService';
 import { artistService } from '../services/artistService';
@@ -9,22 +10,38 @@ import { Card } from '../components/common/Card';
 import { TrackTable } from '../components/common/TrackTable';
 import { CardSkeleton, TrackRowSkeleton } from '../components/common/Skeleton';
 import { usePlayerStore } from '../store/usePlayerStore';
+import { useAuthStore } from '../store/useAuthStore';
 import { getGreeting } from '../utils/format';
-import { Play, Sparkles, Flame, Radio, Disc, Globe, RefreshCw } from 'lucide-react';
+import {
+  Play,
+  Sparkles,
+  Flame,
+  Radio,
+  Disc,
+  Globe,
+  Search,
+  ChevronRight,
+  Music,
+  Heart,
+} from 'lucide-react';
 import { AddToPlaylistModal } from '../components/common/AddToPlaylistModal';
 
 const DISCOVER_GENRES = [
-  { label: 'Trending', value: 'popular' },
-  { label: 'Chill', value: 'chill' },
+  { label: 'Popular', value: 'popular' },
+  { label: 'Chill Vibes', value: 'chill' },
+  { label: 'Lo-Fi Beats', value: 'lofi' },
   { label: 'Electronic', value: 'electronic' },
   { label: 'Rock', value: 'rock' },
-  { label: 'Lo-Fi', value: 'lofi' },
+  { label: 'Focus & Study', value: 'focus' },
   { label: 'Ambient', value: 'ambient' },
-  { label: 'Jazz', value: 'jazz' },
-  { label: 'Focus', value: 'focus' },
+  { label: 'Jazz Night', value: 'jazz' },
 ];
 
 export const HomePage: React.FC = () => {
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const { playTrack, playQueue } = usePlayerStore();
+
   const [popularTracks, setPopularTracks] = useState<Track[]>([]);
   const [albums, setAlbums] = useState<Album[]>([]);
   const [artists, setArtists] = useState<Artist[]>([]);
@@ -36,17 +53,15 @@ export const HomePage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedTrackForPlaylist, setSelectedTrackForPlaylist] = useState<Track | null>(null);
 
-  const { playTrack, playQueue } = usePlayerStore();
-
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         const [tracksRes, albumsRes, artistsRes, playlistsRes] = await Promise.all([
           trackService.getTracks({ limit: 10, sort: 'popular' }),
-          albumService.getAlbums({ limit: 6 }),
-          artistService.getArtists({ limit: 6 }),
-          playlistService.getPlaylists(6),
+          albumService.getAlbums({ limit: 8 }),
+          artistService.getArtists({ limit: 8 }),
+          playlistService.getPlaylists(8),
         ]);
 
         setPopularTracks(tracksRes.tracks || []);
@@ -54,7 +69,6 @@ export const HomePage: React.FC = () => {
         setArtists(artistsRes.artists || []);
         setPlaylists(playlistsRes.playlists || []);
 
-        // Fetch recent if possible
         trackService
           .getRecentlyPlayed()
           .then((res) => setRecentTracks(res.tracks || []))
@@ -69,7 +83,6 @@ export const HomePage: React.FC = () => {
     fetchData();
   }, []);
 
-  // Fetch Jamendo Discover Tracks
   useEffect(() => {
     let isCancelled = false;
     setJamendoLoading(true);
@@ -78,22 +91,18 @@ export const HomePage: React.FC = () => {
       try {
         let res;
         if (selectedGenre === 'popular') {
-          res = await jamendoService.getPopular(6);
+          res = await jamendoService.getPopular(8);
         } else {
-          res = await jamendoService.getByGenre(selectedGenre, 6);
+          res = await jamendoService.getByGenre(selectedGenre, 8);
         }
         if (!isCancelled) {
           setJamendoTracks(res.tracks || []);
         }
       } catch (err) {
-        console.error('Failed to fetch Jamendo discovery tracks:', err);
-        if (!isCancelled) {
-          setJamendoTracks([]);
-        }
+        console.error('Failed to fetch Jamendo tracks:', err);
+        if (!isCancelled) setJamendoTracks([]);
       } finally {
-        if (!isCancelled) {
-          setJamendoLoading(false);
-        }
+        if (!isCancelled) setJamendoLoading(false);
       }
     };
 
@@ -104,99 +113,210 @@ export const HomePage: React.FC = () => {
   }, [selectedGenre]);
 
   const greeting = getGreeting();
+  const userName = user?.name ? user.name.split(' ')[0] : 'Alex';
+
+  // Featured Hero Card item (uses top playlist or fallback)
+  const heroFeatured = playlists[0] || {
+    id: 'hero-1',
+    name: 'Late Night Frequencies',
+    description:
+      'Take a moment to unwind and immerse yourself in a world of soothing melodies, carefully curated to enhance your evening experience.',
+    coverUrl:
+      'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1200&auto=format&fit=crop',
+    tracks: popularTracks,
+  };
 
   return (
-    <div className="flex flex-col gap-8 p-6 max-w-7xl mx-auto">
-      {/* Hero Welcome & Quick Grid */}
+    <div className="flex flex-col gap-8 p-4 sm:p-6 max-w-7xl mx-auto">
+      {/* 1. Top Section: Clean Greeting & Search Bar */}
       <section className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
-            <span>{greeting}</span>
-            <Sparkles className="w-6 h-6 text-brand-400 animate-pulse" />
+        <div className="flex flex-col">
+          <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+            {greeting}
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+            <span>{userName}</span>
+            <Sparkles className="w-5 h-5 text-red-500 animate-pulse" />
           </h1>
         </div>
 
-        {/* Quick Launch Cards (Top 6) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {playlists.slice(0, 6).map((pl) => (
-            <div
-              key={pl.id}
-              onClick={() => {
-                if (pl.tracks && pl.tracks.length > 0) {
-                  playQueue(pl.tracks, 0);
-                }
-              }}
-              className="group flex items-center justify-between bg-white/5 hover:bg-white/10 rounded-lg overflow-hidden transition-all duration-300 cursor-pointer border border-white/5 hover:border-white/10 shadow hover:shadow-lg"
-            >
-              <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                {pl.coverUrl ? (
-                  <img
-                    src={pl.coverUrl}
-                    alt={pl.name}
-                    className="w-16 h-16 object-cover shadow-md shrink-0"
-                  />
-                ) : (
-                  <div className="w-16 h-16 bg-zinc-800 flex items-center justify-center shrink-0">
-                    <Disc className="w-8 h-8 text-zinc-500" />
-                  </div>
-                )}
-                <span className="font-bold text-sm text-white truncate pr-2">
-                  {pl.name}
-                </span>
-              </div>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (pl.tracks && pl.tracks.length > 0) {
-                    playQueue(pl.tracks, 0);
-                  }
-                }}
-                className="mr-3 w-10 h-10 rounded-full bg-brand-500 hover:bg-brand-400 text-black flex items-center justify-center shadow-xl opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300 hover:scale-105 active:scale-95 shrink-0"
-              >
-                <Play className="w-4 h-4 fill-current ml-0.5" />
-              </button>
-            </div>
-          ))}
+        {/* Large Rounded Pill Search Bar */}
+        <div
+          onClick={() => navigate('/search')}
+          className="group relative flex items-center gap-3 px-4 py-3 bg-white dark:bg-[#1c1d24] hover:bg-zinc-50 dark:hover:bg-[#252632] rounded-full border border-black/5 dark:border-white/10 shadow-sm hover:shadow-md cursor-pointer transition-all duration-300"
+        >
+          <Search className="w-5 h-5 text-zinc-400 group-hover:text-red-500 transition-colors" />
+          <span className="text-sm font-medium text-zinc-400 dark:text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-200 transition-colors">
+            Search songs, artists & albums
+          </span>
         </div>
       </section>
 
-      {/* Recently Played Section (if any) */}
+      {/* 2. Featured Music Section (Cinematic Hero Card inspired by Reference) */}
+      <section className="relative w-full rounded-3xl overflow-hidden shadow-2xl border border-black/5 dark:border-white/10 min-h-[340px] sm:min-h-[380px] flex flex-col justify-between p-6 sm:p-8 bg-zinc-900 text-white group">
+        {/* Background Image with Dark Gradient Overlay */}
+        <img
+          src={
+            heroFeatured.coverUrl ||
+            'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1200&auto=format&fit=crop'
+          }
+          alt={heroFeatured.name}
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter brightness-90"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/30" />
+
+        {/* Top Tag / Badge */}
+        <div className="relative z-10 flex items-center justify-between">
+          <span className="px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-widest bg-white/20 backdrop-blur-md text-white border border-white/20 shadow-md">
+            Mood of the week
+          </span>
+        </div>
+
+        {/* Middle Content */}
+        <div className="relative z-10 flex flex-col gap-2 max-w-xl my-4">
+          <span className="text-xs font-bold uppercase tracking-widest text-red-400">
+            Featured Playlist
+          </span>
+          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight drop-shadow-md">
+            {heroFeatured.name}
+          </h2>
+          <p className="text-xs sm:text-sm text-zinc-300 font-medium line-clamp-2 max-w-lg leading-relaxed">
+            {heroFeatured.description ||
+              'Take a moment to unwind with atmospheric sounds, carefully curated for an unforgettable evening listening session.'}
+          </p>
+        </div>
+
+        {/* Bottom Metadata Pill Bar (Artist Avatar + Track Count + Play Button) */}
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 pt-2">
+          <div className="flex items-center gap-2.5 bg-black/60 backdrop-blur-xl px-4 py-2 rounded-full border border-white/15">
+            <div className="w-7 h-7 rounded-full bg-red-500 flex items-center justify-center font-bold text-xs text-white shadow-md">
+              N
+            </div>
+            <span className="text-xs font-bold text-white tracking-wide">
+              Nova • {heroFeatured.tracks?.length || 12} Tracks
+            </span>
+          </div>
+
+          <button
+            onClick={() => {
+              if (heroFeatured.tracks && heroFeatured.tracks.length > 0) {
+                playQueue(heroFeatured.tracks, 0);
+              } else if (popularTracks.length > 0) {
+                playQueue(popularTracks, 0);
+              }
+            }}
+            className="px-6 py-2.5 rounded-full bg-white hover:bg-red-500 text-slate-900 hover:text-white font-extrabold text-sm shadow-2xl flex items-center gap-2 hover:scale-105 active:scale-95 transition-all duration-300"
+          >
+            <Play className="w-4 h-4 fill-current" />
+            <span>Play</span>
+          </button>
+        </div>
+      </section>
+
+      {/* 3. Horizontal Carousel: Recently Played */}
       {recentTracks.length > 0 && (
-        <section className="flex flex-col gap-4">
+        <section className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-              <Radio className="w-5 h-5 text-brand-400" />
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <Radio className="w-5 h-5 text-red-500" />
               Recently Played
             </h2>
+            <button
+              onClick={() => navigate('/recently-played')}
+              className="text-xs font-bold text-red-500 hover:text-red-600 flex items-center gap-0.5"
+            >
+              See all <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {recentTracks.slice(0, 6).map((track) => (
-              <Card
-                key={track.id}
-                id={track.id}
-                title={track.title}
-                subtitle={track.artist?.name || 'Track'}
-                imageUrl={track.artworkUrl || track.coverUrl}
-                type="track"
-                onPlay={() => playTrack(track, recentTracks)}
-              />
+
+          <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-2 px-2">
+            {recentTracks.map((track) => (
+              <div key={track.id} className="w-40 sm:w-48 shrink-0">
+                <Card
+                  id={track.id}
+                  title={track.title}
+                  subtitle={track.artist?.name || 'Track'}
+                  imageUrl={track.artworkUrl || track.coverUrl}
+                  type="track"
+                  onPlay={() => playTrack(track, recentTracks)}
+                />
+              </div>
             ))}
           </div>
         </section>
       )}
 
-      {/* Popular Tracks Table */}
-      <section className="flex flex-col gap-4">
+      {/* 4. Horizontal Carousel: Discover Jamendo Music */}
+      <section className="flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-2">
+              <Globe className="w-5 h-5 text-amber-500" />
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+                Discover Online Music
+              </h2>
+            </div>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              Explore independent tracks streamed directly from Jamendo
+            </p>
+          </div>
+
+          {/* Genre Pill Filter Buttons */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+            {DISCOVER_GENRES.map((g) => (
+              <button
+                key={g.value}
+                onClick={() => setSelectedGenre(g.value)}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+                  selectedGenre === g.value
+                    ? 'bg-red-500 text-white shadow-md shadow-red-500/20'
+                    : 'bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-700 dark:text-zinc-300'
+                }`}
+              >
+                {g.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {jamendoLoading ? (
+          <div className="flex gap-4 overflow-x-auto no-scrollbar py-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="w-40 sm:w-48 shrink-0">
+                <CardSkeleton />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-2 px-2">
+            {jamendoTracks.map((track) => (
+              <div key={track.id} className="w-40 sm:w-48 shrink-0">
+                <Card
+                  id={track.id}
+                  title={track.title}
+                  subtitle={track.artist?.name || 'Jamendo Artist'}
+                  imageUrl={track.artworkUrl || track.coverUrl}
+                  type="track"
+                  source="jamendo"
+                  onPlay={() => playTrack(track, jamendoTracks)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 5. Popular Songs Table Section */}
+      <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-            <Flame className="w-5 h-5 text-amber-400" />
+          <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+            <Flame className="w-5 h-5 text-amber-500" />
             Popular Tracks
           </h2>
           {popularTracks.length > 0 && (
             <button
               onClick={() => playQueue(popularTracks, 0)}
-              className="text-xs font-bold text-brand-400 hover:text-brand-300 hover:underline uppercase tracking-wider"
+              className="text-xs font-bold text-red-500 hover:text-red-600 uppercase tracking-wider"
             >
               Play All
             </button>
@@ -210,7 +330,7 @@ export const HomePage: React.FC = () => {
             <TrackRowSkeleton />
           </div>
         ) : (
-          <div className="bg-[#181818]/40 rounded-xl p-2 border border-white/5">
+          <div className="bg-white dark:bg-[#16171e] rounded-2xl md:rounded-3xl p-2 md:p-3 border border-black/5 dark:border-white/5 shadow-sm">
             <TrackTable
               tracks={popularTracks}
               onOpenAddToPlaylist={(t) => setSelectedTrackForPlaylist(t)}
@@ -219,161 +339,76 @@ export const HomePage: React.FC = () => {
         )}
       </section>
 
-      {/* Discover Online Music (Jamendo Catalog) */}
-      <section className="flex flex-col gap-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <Globe className="w-5 h-5 text-amber-400" />
-              <h2 className="text-xl font-bold text-white tracking-tight">Discover Online Music</h2>
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                Jamendo
-              </span>
-            </div>
-            <p className="text-xs text-zinc-400 mt-0.5">
-              Explore Creative Commons & independent music streamed from Jamendo
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
-            {DISCOVER_GENRES.map((g) => (
-              <button
-                key={g.value}
-                onClick={() => setSelectedGenre(g.value)}
-                className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
-                  selectedGenre === g.value
-                    ? 'bg-amber-500 text-black shadow-md'
-                    : 'bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white'
-                }`}
-              >
-                {g.label}
-              </button>
-            ))}
-            {jamendoTracks.length > 0 && (
-              <button
-                onClick={() => playQueue(jamendoTracks, 0)}
-                className="ml-2 text-xs font-bold text-amber-400 hover:text-amber-300 uppercase tracking-wider whitespace-nowrap"
-              >
-                Play All
-              </button>
-            )}
-          </div>
-        </div>
-
-        {jamendoLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <CardSkeleton key={i} />
-            ))}
-          </div>
-        ) : jamendoTracks.length === 0 ? (
-          <div className="py-8 text-center text-zinc-400 bg-white/5 rounded-xl border border-white/5 text-sm">
-            Online music is temporarily unavailable.
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {jamendoTracks.map((track) => (
-              <Card
-                key={track.id}
-                id={track.id}
-                title={track.title}
-                subtitle={track.artist?.name || 'Jamendo Artist'}
-                imageUrl={track.artworkUrl || track.coverUrl}
-                type="track"
-                source="jamendo"
-                onPlay={() => playTrack(track, jamendoTracks)}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Trending Albums */}
-      <section className="flex flex-col gap-4">
+      {/* 6. Trending Albums Horizontal Carousel */}
+      <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white tracking-tight">Trending Albums</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+            Trending Albums
+          </h2>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-2 px-2">
           {loading
-            ? Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="w-40 sm:w-48 shrink-0">
+                  <CardSkeleton />
+                </div>
+              ))
             : albums.map((alb) => (
-                <Card
-                  key={alb.id}
-                  id={alb.id}
-                  title={alb.title}
-                  subtitle={alb.artist?.name || 'Album'}
-                  imageUrl={alb.coverUrl}
-                  type="album"
-                  linkTo={`/album/${alb.id}`}
-                  onPlay={() => {
-                    albumService.getAlbumById(alb.id).then((res) => {
-                      if (res.album.tracks && res.album.tracks.length > 0) {
-                        playQueue(res.album.tracks, 0);
-                      }
-                    });
-                  }}
-                />
+                <div key={alb.id} className="w-40 sm:w-48 shrink-0">
+                  <Card
+                    id={alb.id}
+                    title={alb.title}
+                    subtitle={alb.artist?.name || 'Album'}
+                    imageUrl={alb.coverUrl}
+                    type="album"
+                    linkTo={`/album/${alb.id}`}
+                    onPlay={() => {
+                      albumService.getAlbumById(alb.id).then((res) => {
+                        if (res.album.tracks && res.album.tracks.length > 0) {
+                          playQueue(res.album.tracks, 0);
+                        }
+                      });
+                    }}
+                  />
+                </div>
               ))}
         </div>
       </section>
 
-      {/* Popular Artists */}
-      <section className="flex flex-col gap-4">
+      {/* 7. Popular Artists Horizontal Carousel */}
+      <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white tracking-tight">Popular Artists</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+            Popular Artists
+          </h2>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-2 px-2">
           {loading
-            ? Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="w-40 sm:w-48 shrink-0">
+                  <CardSkeleton />
+                </div>
+              ))
             : artists.map((art) => (
-                <Card
-                  key={art.id}
-                  id={art.id}
-                  title={art.name}
-                  subtitle="Artist"
-                  imageUrl={art.imageUrl}
-                  type="artist"
-                  linkTo={`/artist/${art.id}`}
-                  onPlay={() => {
-                    artistService.getArtistById(art.id).then((res) => {
-                      if (res.artist.tracks && res.artist.tracks.length > 0) {
-                        playQueue(res.artist.tracks, 0);
-                      }
-                    });
-                  }}
-                />
-              ))}
-        </div>
-      </section>
-
-      {/* Featured Playlists */}
-      <section className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white tracking-tight">Featured Playlists</h2>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {loading
-            ? Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
-            : playlists.map((pl) => (
-                <Card
-                  key={pl.id}
-                  id={pl.id}
-                  title={pl.name}
-                  subtitle={pl.description || 'Playlist'}
-                  imageUrl={pl.coverUrl}
-                  type="playlist"
-                  linkTo={`/playlist/${pl.id}`}
-                  onPlay={() => {
-                    playlistService.getPlaylistById(pl.id).then((res) => {
-                      if (res.playlist.tracks && res.playlist.tracks.length > 0) {
-                        playQueue(res.playlist.tracks, 0);
-                      }
-                    });
-                  }}
-                />
+                <div key={art.id} className="w-40 sm:w-48 shrink-0">
+                  <Card
+                    id={art.id}
+                    title={art.name}
+                    subtitle="Artist"
+                    imageUrl={art.imageUrl}
+                    type="artist"
+                    linkTo={`/artist/${art.id}`}
+                    onPlay={() => {
+                      artistService.getArtistById(art.id).then((res) => {
+                        if (res.artist.tracks && res.artist.tracks.length > 0) {
+                          playQueue(res.artist.tracks, 0);
+                        }
+                      });
+                    }}
+                  />
+                </div>
               ))}
         </div>
       </section>

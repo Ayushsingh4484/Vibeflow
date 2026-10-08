@@ -70,107 +70,90 @@ export const TrackRow: React.FC<TrackRowProps> = ({
   return (
     <div
       onDoubleClick={handlePlayClick}
-      className={`group relative flex items-center gap-4 px-4 py-2.5 rounded-lg transition-colors cursor-pointer text-sm ${
-        isCurrent ? 'bg-white/10 text-brand-400' : 'hover:bg-white/5 text-zinc-300 hover:text-white'
+      className={`group relative flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-2.5 rounded-xl transition-all cursor-pointer text-sm ${
+        isCurrent
+          ? 'bg-red-500/10 text-red-500 font-bold'
+          : 'hover:bg-black/5 dark:hover:bg-white/5 text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white'
       }`}
     >
       {/* Index & Play Button */}
       <div className="w-6 flex items-center justify-center shrink-0">
         {isCurrent && isPlaying ? (
           <div className="flex items-end gap-0.5 h-4 w-4 group-hover:hidden">
-            <span className="w-1 bg-brand-500 rounded-full animate-bar-1" />
-            <span className="w-1 bg-brand-500 rounded-full animate-bar-2" />
-            <span className="w-1 bg-brand-500 rounded-full animate-bar-3" />
+            <span className="w-1 bg-red-500 rounded-full animate-bar-1" />
+            <span className="w-1 bg-red-500 rounded-full animate-bar-2" />
+            <span className="w-1 bg-red-500 rounded-full animate-bar-3" />
           </div>
         ) : (
-          <span className={`text-zinc-500 group-hover:hidden ${isCurrent ? 'text-brand-400 font-bold' : ''}`}>
+          <span className={`text-zinc-400 dark:text-zinc-500 group-hover:hidden ${isCurrent ? 'text-red-500 font-bold' : ''}`}>
             {index + 1}
           </span>
         )}
 
         <button
           onClick={handlePlayClick}
-          className="hidden group-hover:flex items-center justify-center text-white hover:scale-110 transition-transform"
+          className="hidden group-hover:flex items-center justify-center text-slate-900 dark:text-white hover:scale-110 transition-transform"
         >
           {isCurrent && isPlaying ? (
-            <Pause className="w-4 h-4 fill-current text-brand-400" />
+            <Pause className="w-4 h-4 fill-current text-red-500" />
           ) : (
-            <Play className="w-4 h-4 fill-current text-white" />
+            <Play className="w-4 h-4 fill-current text-slate-900 dark:text-white" />
           )}
         </button>
       </div>
 
-      {/* Cover & Title */}
-      <div className="flex items-center gap-3 flex-1 min-w-0">
-        {(track.artworkUrl || track.coverUrl) && (
+      {/* Artwork & Title */}
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        {(track.artworkUrl || track.coverUrl) ? (
           <img
             src={(track.artworkUrl || track.coverUrl)!}
             alt={track.title}
-            className="w-10 h-10 rounded object-cover shrink-0 shadow bg-zinc-800"
+            className="w-10 h-10 rounded-lg object-cover shadow-sm bg-zinc-200 dark:bg-zinc-800 shrink-0"
             onError={(e) => {
               (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(track.title)}`;
             }}
           />
+        ) : (
+          <div className="w-10 h-10 rounded-lg bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+            <Play className="w-4 h-4 text-zinc-400" />
+          </div>
         )}
+
         <div className="flex flex-col min-w-0">
-          <div className="flex items-center gap-2">
-            <span
-              className={`font-medium truncate transition-colors ${
-                isCurrent ? 'text-brand-400 font-semibold' : 'text-white'
-              }`}
-            >
+          <div className="flex items-center gap-1.5">
+            <span className={`truncate font-semibold ${isCurrent ? 'text-red-500' : 'text-slate-900 dark:text-white'}`}>
               {track.title}
             </span>
             {isJamendo && (
-              <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-medium border border-amber-500/30 shrink-0">
+              <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-600 dark:text-amber-300 font-bold border border-amber-500/20 shrink-0">
                 Jamendo
               </span>
             )}
           </div>
           {track.artist && (
-            track.artist.id ? (
-              <Link
-                to={`/artist/${track.artist.id}`}
-                onClick={(e) => e.stopPropagation()}
-                className="text-xs text-zinc-400 hover:text-white hover:underline truncate"
-              >
-                {track.artist.name}
-              </Link>
-            ) : (
-              <span className="text-xs text-zinc-400 truncate">
-                {track.artist.name}
-              </span>
-            )
+            <Link
+              to={`/artist/${track.artist.id}`}
+              onClick={(e) => e.stopPropagation()}
+              className="text-xs text-zinc-500 dark:text-zinc-400 hover:underline truncate"
+            >
+              {track.artist.name}
+            </Link>
           )}
         </div>
       </div>
 
-      {/* Album */}
-      {track.album && (
-        <div className="hidden md:flex flex-1 min-w-0 items-center">
-          {track.album.id ? (
-            <Link
-              to={`/album/${track.album.id}`}
-              onClick={(e) => e.stopPropagation()}
-              className="text-xs text-zinc-400 hover:text-white hover:underline truncate"
-            >
-              {track.album.title}
-            </Link>
-          ) : (
-            <span className="text-xs text-zinc-400 truncate">
-              {track.album.title}
-            </span>
-          )}
-        </div>
-      )}
+      {/* Album Title (Desktop Only) */}
+      <div className="hidden md:block w-1/4 truncate text-xs text-zinc-500 dark:text-zinc-400">
+        {track.album?.title || 'Single'}
+      </div>
 
       {/* Like Button */}
       <button
         onClick={handleLikeToggle}
-        className={`p-1.5 transition-colors ${
+        className={`p-1.5 transition-all ${
           isLiked
-            ? 'text-brand-500'
-            : 'text-zinc-400 hover:text-white opacity-0 group-hover:opacity-100'
+            ? 'text-red-500'
+            : 'text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-slate-900 dark:hover:text-white'
         }`}
         title={isLiked ? 'Unlike' : 'Like'}
       >
@@ -178,8 +161,8 @@ export const TrackRow: React.FC<TrackRowProps> = ({
       </button>
 
       {/* Duration */}
-      <div className="text-xs text-zinc-400 w-12 text-right tabular-nums">
-        {formatTime(track.duration)}
+      <div className="text-xs text-zinc-400 tabular-nums w-10 text-right shrink-0">
+        {formatTime(track.duration || 0)}
       </div>
 
       {/* More Options Dropdown */}
@@ -189,29 +172,24 @@ export const TrackRow: React.FC<TrackRowProps> = ({
             e.stopPropagation();
             setShowMenu(!showMenu);
           }}
-          className="p-1.5 text-zinc-400 hover:text-white rounded-full opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all"
+          className="p-1.5 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-slate-900 dark:hover:text-white transition-opacity"
+          title="More options"
         >
           <MoreHorizontal className="w-4 h-4" />
         </button>
 
         {showMenu && (
           <>
-            <div
-              className="fixed inset-0 z-40"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowMenu(false);
-              }}
-            />
-            <div className="absolute right-0 top-8 z-50 w-52 bg-[#282828] border border-white/10 rounded-xl shadow-2xl py-1 text-xs text-zinc-200 animate-slide-up">
+            <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
+            <div className="absolute right-0 top-8 z-50 w-48 bg-white dark:bg-[#1f2029] border border-black/10 dark:border-white/10 rounded-2xl shadow-2xl py-1 text-xs text-slate-700 dark:text-zinc-200 animate-slide-up">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   addToQueue(track);
-                  addToast(`Added "${track.title}" to queue`, 'success');
                   setShowMenu(false);
+                  addToast('Added to queue', 'success');
                 }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-white/10 transition-colors"
+                className="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
               >
                 <Plus className="w-4 h-4 text-zinc-400" />
                 Add to queue
@@ -221,10 +199,10 @@ export const TrackRow: React.FC<TrackRowProps> = ({
                 onClick={(e) => {
                   e.stopPropagation();
                   playNext(track);
-                  addToast(`"${track.title}" will play next`, 'success');
                   setShowMenu(false);
+                  addToast('Will play next', 'success');
                 }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-white/10 transition-colors"
+                className="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
               >
                 <ListPlus className="w-4 h-4 text-zinc-400" />
                 Play next
@@ -237,27 +215,11 @@ export const TrackRow: React.FC<TrackRowProps> = ({
                     onOpenAddToPlaylist(track);
                     setShowMenu(false);
                   }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-white/10 transition-colors"
+                  className="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
                 >
                   <Plus className="w-4 h-4 text-zinc-400" />
-                  Add to playlist...
+                  Add to playlist
                 </button>
-              )}
-
-              {track.externalUrl && (
-                <a
-                  href={track.externalUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowMenu(false);
-                  }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-white/10 text-amber-300 hover:text-amber-200 transition-colors border-t border-white/5"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  View on Jamendo
-                </a>
               )}
 
               {playlistId && onRemoveFromPlaylist && (
@@ -267,7 +229,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
                     onRemoveFromPlaylist(track.id);
                     setShowMenu(false);
                   }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-rose-400 hover:bg-rose-500/10 transition-colors border-t border-white/5"
+                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-rose-500 hover:bg-rose-500/10 transition-colors border-t border-black/5 dark:border-white/10"
                 >
                   <Trash2 className="w-4 h-4" />
                   Remove from playlist

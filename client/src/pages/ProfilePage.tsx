@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../store/useAuthStore';
 import { useToastStore } from '../store/useToastStore';
+import { useThemeStore } from '../store/useThemeStore';
 import { authService } from '../services/authService';
-import { User, ShieldCheck, Camera, LogOut } from 'lucide-react';
+import { User, ShieldCheck, Camera, LogOut, Sun, Moon } from 'lucide-react';
 import { formatDate } from '../utils/format';
 
 export const ProfilePage: React.FC = () => {
   const { user, setUser, logout } = useAuthStore();
   const { addToast } = useToastStore();
+  const { effectiveTheme, setThemePreference } = useThemeStore();
+  const toggleTheme = () => setThemePreference(effectiveTheme === 'dark' ? 'light' : 'dark');
 
   const [name, setName] = useState(user?.name || '');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -52,21 +55,21 @@ export const ProfilePage: React.FC = () => {
   if (!user) return null;
 
   return (
-    <div className="p-6 max-w-4xl mx-auto flex flex-col gap-8">
-      {/* Profile Header */}
-      <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6 p-6 rounded-2xl bg-gradient-to-b from-zinc-800 to-[#181818] border border-white/5 shadow-xl">
+    <div className="p-4 sm:p-6 max-w-4xl mx-auto flex flex-col gap-8">
+      {/* Profile Header Banner */}
+      <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6 p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#1c1d24] border border-black/5 dark:border-white/5 shadow-xl">
         {/* Avatar with upload hover overlay */}
-        <label className="relative w-36 h-36 rounded-full overflow-hidden shadow-2xl bg-zinc-800 border-4 border-white/10 group cursor-pointer shrink-0">
+        <label className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full overflow-hidden shadow-2xl bg-zinc-200 dark:bg-zinc-800 border-4 border-white dark:border-zinc-700 group cursor-pointer shrink-0">
           {avatarPreview ? (
             <img src={avatarPreview} alt={user.name} className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-brand-500 text-black font-black text-4xl">
+            <div className="w-full h-full flex items-center justify-center bg-red-500 text-white font-black text-4xl">
               {user.name.charAt(0).toUpperCase()}
             </div>
           )}
-          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity">
+          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity">
             <Camera className="w-6 h-6 mb-1" />
-            <span className="text-[10px] font-bold uppercase tracking-wider">Change</span>
+            <span className="text-[10px] font-extrabold uppercase tracking-wider">Change</span>
           </div>
           <input
             type="file"
@@ -81,58 +84,84 @@ export const ProfilePage: React.FC = () => {
           <div className="flex items-center justify-center sm:justify-start gap-2">
             <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Profile</span>
             {user.role === 'ADMIN' && (
-              <span className="flex items-center gap-1 text-xs font-bold bg-emerald-500/20 text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+              <span className="flex items-center gap-1 text-xs font-bold bg-emerald-500/10 text-emerald-500 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
                 <ShieldCheck className="w-3.5 h-3.5" /> Admin
               </span>
             )}
           </div>
-          <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight truncate">
+          <h1 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight truncate">
             {user.name}
           </h1>
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
             {user.email} • Member since {formatDate(user.createdAt)}
           </p>
         </div>
       </div>
 
-      {/* Profile Settings Form */}
-      <div className="p-6 rounded-2xl bg-[#181818] border border-white/5 flex flex-col gap-6">
-        <h2 className="text-lg font-bold text-white tracking-tight">Edit Profile</h2>
+      {/* Settings & Preferences Section */}
+      <div className="p-6 rounded-3xl bg-white dark:bg-[#1c1d24] border border-black/5 dark:border-white/5 shadow-md flex flex-col gap-6">
+        <h2 className="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">
+          Account & Preferences
+        </h2>
 
+        {/* Theme Toggle Section */}
+        <div className="flex items-center justify-between p-4 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
+          <div className="flex items-center gap-3">
+            {effectiveTheme === 'dark' ? (
+              <Moon className="w-5 h-5 text-indigo-400" />
+            ) : (
+              <Sun className="w-5 h-5 text-amber-500" />
+            )}
+            <div>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">App Theme</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                Current theme is {effectiveTheme === 'dark' ? 'Dark Mode (Neutral Black)' : 'Light Mode (Pristine Warm White)'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={toggleTheme}
+            className="px-4 py-2 rounded-full font-bold text-xs bg-red-500 hover:bg-red-600 text-white shadow-md shadow-red-500/20 transition-all hover:scale-105"
+          >
+            Switch to {effectiveTheme === 'dark' ? 'Light' : 'Dark'} Mode
+          </button>
+        </div>
+
+        {/* Profile Settings Form */}
         <form onSubmit={handleUpdate} className="flex flex-col gap-4 max-w-md">
           <div>
-            <label className="block text-xs font-semibold text-zinc-400 mb-1.5">Display Name</label>
+            <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5">Display Name</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors"
+              className="w-full bg-black/5 dark:bg-zinc-900 border border-black/10 dark:border-zinc-700 rounded-2xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-red-500 transition-colors"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-zinc-400 mb-1.5">Email (read-only)</label>
+            <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5">Email (read-only)</label>
             <input
               type="email"
               value={user.email}
               disabled
-              className="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-500 cursor-not-allowed"
+              className="w-full bg-black/5 dark:bg-zinc-900/50 border border-black/5 dark:border-zinc-800 rounded-2xl px-4 py-2.5 text-sm text-zinc-400 cursor-not-allowed"
             />
           </div>
 
-          <div className="flex items-center gap-3 mt-2">
+          <div className="flex items-center gap-3 mt-3">
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2.5 rounded-full bg-brand-500 hover:bg-brand-400 text-black font-bold text-xs shadow-lg transition-all"
+              className="px-6 py-2.5 rounded-full bg-red-500 hover:bg-red-600 text-white font-extrabold text-xs shadow-lg shadow-red-500/20 transition-all hover:scale-105"
             >
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
             <button
               type="button"
               onClick={logout}
-              className="px-5 py-2.5 rounded-full bg-white/5 hover:bg-rose-500/20 text-rose-400 font-bold text-xs flex items-center gap-1.5 transition-colors"
+              className="px-5 py-2.5 rounded-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 font-extrabold text-xs flex items-center gap-1.5 transition-colors"
             >
               <LogOut className="w-3.5 h-3.5" /> Log out
             </button>

@@ -7,8 +7,13 @@ import {
   LogOut,
   ShieldCheck,
   Search,
+  Bell,
+  Sun,
+  Moon,
+  Settings,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useThemeStore } from '../../store/useThemeStore';
 
 interface TopNavProps {
   searchQuery?: string;
@@ -19,67 +24,79 @@ export const TopNav: React.FC<TopNavProps> = ({ searchQuery, onSearchChange }) =
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuthStore();
+  const { effectiveTheme, setThemePreference } = useThemeStore();
+  const toggleTheme = () => setThemePreference(effectiveTheme === 'dark' ? 'light' : 'dark');
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [hasUnreadNotification, setHasUnreadNotification] = useState(true);
 
   const isSearchPage = location.pathname.startsWith('/search');
 
   return (
-    <header className="h-16 px-6 glass-nav flex items-center justify-between sticky top-0 z-20 select-none">
+    <header className="h-16 px-4 md:px-6 glass-nav flex items-center justify-between sticky top-0 z-20 select-none transition-colors">
       {/* Navigation history & search bar */}
       <div className="flex items-center gap-3 flex-1 max-w-xl">
-        <div className="flex items-center gap-2">
+        <div className="hidden sm:flex items-center gap-1.5">
           <button
             onClick={() => navigate(-1)}
-            className="w-8 h-8 rounded-full bg-black/70 hover:bg-black text-zinc-300 hover:text-white flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-700 dark:text-zinc-300 flex items-center justify-center transition-colors"
             title="Go back"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <button
             onClick={() => navigate(1)}
-            className="w-8 h-8 rounded-full bg-black/70 hover:bg-black text-zinc-300 hover:text-white flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-700 dark:text-zinc-300 flex items-center justify-center transition-colors"
             title="Go forward"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Search Bar on Search Page or clickable input */}
+        {/* Search Bar on Search Page or Clickable Input */}
         {isSearchPage && onSearchChange ? (
-          <div className="relative flex-1 max-w-md ml-2">
+          <div className="relative flex-1 max-w-md ml-1">
             <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="What do you want to play?"
+              placeholder="Search songs, artists & albums"
               value={searchQuery || ''}
               onChange={(e) => onSearchChange(e.target.value)}
               autoFocus
-              className="w-full bg-[#242424] hover:bg-[#2a2a2a] focus:bg-[#333333] text-sm text-white placeholder-zinc-400 pl-10 pr-4 py-2 rounded-full border border-transparent focus:border-white/20 focus:outline-none transition-all shadow-inner"
+              className="w-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 focus:bg-white dark:focus:bg-zinc-800 text-sm text-slate-900 dark:text-white placeholder-zinc-400 pl-10 pr-4 py-2 rounded-full border border-black/10 dark:border-white/10 focus:border-red-500 focus:outline-none transition-all shadow-sm"
             />
           </div>
-        ) : null}
+        ) : (
+          <div
+            onClick={() => navigate('/search')}
+            className="hidden md:flex items-center gap-2.5 px-4 py-2 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 rounded-full text-xs text-zinc-500 dark:text-zinc-400 cursor-pointer transition-all border border-black/5 dark:border-white/5 flex-1 max-w-sm"
+          >
+            <Search className="w-4 h-4 text-zinc-400" />
+            <span>Search songs, artists & albums...</span>
+          </div>
+        )}
       </div>
 
-      {/* Right: Auth / Profile */}
-      <div className="flex items-center gap-3">
+      {/* Right Actions: Single Profile Avatar Entry Point */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* User Profile / Auth */}
         {isAuthenticated && user ? (
           <div className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-2.5 p-1 pr-3 bg-black/60 hover:bg-black/80 rounded-full border border-white/10 hover:border-white/20 transition-all cursor-pointer"
+              className="flex items-center gap-2 p-1 pr-3 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 rounded-full border border-black/5 dark:border-white/10 transition-all cursor-pointer"
             >
               {user.avatarUrl ? (
                 <img
                   src={user.avatarUrl}
                   alt={user.name}
-                  className="w-7 h-7 rounded-full object-cover"
+                  className="w-7 h-7 rounded-full object-cover shadow-sm"
                 />
               ) : (
-                <div className="w-7 h-7 rounded-full bg-brand-500 flex items-center justify-center text-black font-bold text-xs">
+                <div className="w-7 h-7 rounded-full bg-red-500 text-white font-extrabold text-xs flex items-center justify-center">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
               )}
-              <span className="text-xs font-semibold text-white max-w-[120px] truncate">
+              <span className="text-xs font-bold text-slate-900 dark:text-white max-w-[100px] truncate hidden sm:inline-block">
                 {user.name}
               </span>
             </button>
@@ -90,26 +107,35 @@ export const TopNav: React.FC<TopNavProps> = ({ searchQuery, onSearchChange }) =
                   className="fixed inset-0 z-40"
                   onClick={() => setDropdownOpen(false)}
                 />
-                <div className="absolute right-0 top-11 z-50 w-52 bg-[#282828] border border-white/10 rounded-xl shadow-2xl py-1.5 text-xs text-zinc-200 animate-slide-up">
-                  <div className="px-3.5 py-2 border-b border-white/10">
-                    <p className="font-semibold text-white truncate">{user.name}</p>
-                    <p className="text-zinc-400 truncate text-[11px]">{user.email}</p>
+                <div className="absolute right-0 top-11 z-50 w-56 bg-white dark:bg-[#1f2029] border border-black/10 dark:border-white/10 rounded-2xl shadow-2xl py-2 text-xs text-slate-700 dark:text-zinc-200 animate-slide-up">
+                  <div className="px-4 py-2 border-b border-black/5 dark:border-white/10">
+                    <p className="font-bold text-slate-900 dark:text-white truncate">{user.name}</p>
+                    <p className="text-zinc-500 dark:text-zinc-400 truncate text-[11px]">{user.email}</p>
                   </div>
 
                   <Link
                     to="/profile"
                     onClick={() => setDropdownOpen(false)}
-                    className="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-white/10 transition-colors"
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
                   >
                     <User className="w-4 h-4 text-zinc-400" />
-                    Profile & Settings
+                    Profile
+                  </Link>
+
+                  <Link
+                    to="/settings"
+                    onClick={() => setDropdownOpen(false)}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                  >
+                    <Settings className="w-4 h-4 text-zinc-400" />
+                    Settings
                   </Link>
 
                   {user.role === 'ADMIN' && (
                     <Link
                       to="/admin"
                       onClick={() => setDropdownOpen(false)}
-                      className="w-full flex items-center gap-2.5 px-3.5 py-2 text-emerald-400 hover:bg-emerald-500/10 transition-colors font-semibold"
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 transition-colors font-bold"
                     >
                       <ShieldCheck className="w-4 h-4" />
                       Admin Dashboard
@@ -122,7 +148,7 @@ export const TopNav: React.FC<TopNavProps> = ({ searchQuery, onSearchChange }) =
                       setDropdownOpen(false);
                       navigate('/');
                     }}
-                    className="w-full flex items-center gap-2.5 px-3.5 py-2 text-rose-400 hover:bg-rose-500/10 transition-colors border-t border-white/10"
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-rose-500 hover:bg-rose-500/10 transition-colors border-t border-black/5 dark:border-white/10"
                   >
                     <LogOut className="w-4 h-4" />
                     Log out
@@ -132,16 +158,16 @@ export const TopNav: React.FC<TopNavProps> = ({ searchQuery, onSearchChange }) =
             )}
           </div>
         ) : (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Link
               to="/register"
-              className="text-xs md:text-sm font-bold text-zinc-300 hover:text-white px-3 py-1.5 transition-colors"
+              className="text-xs font-bold text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white px-3 py-1.5 transition-colors"
             >
               Sign up
             </Link>
             <Link
               to="/login"
-              className="bg-white hover:bg-zinc-200 text-black text-xs md:text-sm font-bold px-5 py-2 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all"
+              className="bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg shadow-red-500/20 hover:scale-105 active:scale-95 transition-all"
             >
               Log in
             </Link>

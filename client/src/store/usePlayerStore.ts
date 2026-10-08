@@ -14,8 +14,10 @@ interface PlayerState {
   shuffle: boolean;
   repeat: RepeatMode;
   isQueueOpen: boolean;
+  isNowPlayingOpen: boolean;
 
   // Actions
+  setIsNowPlayingOpen: (open: boolean) => void;
   playTrack: (track: Track, newQueue?: Track[]) => void;
   playQueue: (tracks: Track[], startIndex?: number) => void;
   togglePlay: () => void;
@@ -127,6 +129,11 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     shuffle: false,
     repeat: 'off',
     isQueueOpen: false,
+    isNowPlayingOpen: false,
+
+    setIsNowPlayingOpen: (open: boolean) => {
+      set({ isNowPlayingOpen: open });
+    },
 
     playTrack: (track: Track, newQueue?: Track[]) => {
       if (!audio) return;
