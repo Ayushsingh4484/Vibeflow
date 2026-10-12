@@ -125,3 +125,21 @@ export interface ToastMessage {
   type: 'success' | 'error' | 'info';
   message: string;
 }
+
+export interface SuggestionSection {
+  title: string;
+  description: string;
+  tracks: Track[];
+}
+
+export interface SuggestionsResponse {
+  recommendations: Track[];
+  sections: SuggestionSection[];
+}
+
+export interface SearchHistoryItem {
+  id: string;
+  query: string;
+  createdAt: string;
+}
+

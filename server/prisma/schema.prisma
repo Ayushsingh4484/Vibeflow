@@ -19,6 +19,7 @@ model User {
   playlists      Playlist[]
   likedTracks    LikedTrack[]
   recentlyPlayed RecentlyPlayed[]
+  searchHistory  SearchHistory[]
 }
 
 model Artist {
@@ -103,4 +104,14 @@ model RecentlyPlayed {
   track    Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
 
   @@index([userId, playedAt])
+}
+
+model SearchHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  query     String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }

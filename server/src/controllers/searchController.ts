@@ -137,6 +137,18 @@ export const searchCatalog = async (req: Request, res: Response): Promise<void> 
       topResult = { type: 'playlist', data: playlists[0] };
     }
 
+    // Asynchronously record search in SearchHistory if user is logged in
+    if (userId && q.length >= 2) {
+      prisma.searchHistory
+        .create({
+          data: {
+            userId,
+            query: q,
+          },
+        })
+        .catch((err) => console.warn('Failed to record search history:', err.message));
+    }
+
     res.json({
       query: q,
       topResult,
@@ -149,5 +161,173 @@ export const searchCatalog = async (req: Request, res: Response): Promise<void> 
   } catch (error: any) {
     console.error('searchCatalog error:', error);
     res.status(500).json({ error: 'Search operation failed.' });
+  }
+};
+
+/**
+ * Keyword suggestion while searching songs / artists
+ */
+export const getKeywordSuggestions = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const q = req.query.q ? String(req.query.q).trim() : '';
+    if (!q) {
+      res.json({ suggestions: [] });
+      return;
+    }
+
+    // 1. Fetch suggestions from YouTube Music search complete API
+    const ytPromise = YouTubeService.getSearchSuggestions(q, 8);
+
+    // 2. Fetch local track/artist matches as instant suggestions
+    const localTracksPromise = prisma.track.findMany({
+      where: {
+        OR: [
+          { title: { contains: q } },
+          { genre: { contains: q } },
+        ],
+      },
+      take: 4,
+      select: { title: true },
+    });
+
+    const localArtistsPromise = prisma.artist.findMany({
+      where: { name: { contains: q } },
+      take: 4,
+      select: { name: true },
+    });
+
+    const [ytSuggestions, localTracks, localArtists] = await Promise.all([
+      ytPromise.catch(() => []),
+      localTracksPromise.catch(() => []),
+      localArtistsPromise.catch(() => []),
+    ]);
+
+    // Deduplicate and combine suggestions
+    const combinedSet = new Set<string>();
+
+    localTracks.forEach((t) => {
+      if (t.title) combinedSet.add(t.title);
+    });
+
+    localArtists.forEach((a) => {
+      if (a.name) combinedSet.add(a.name);
+    });
+
+    ytSuggestions.forEach((s) => {
+      if (s) combinedSet.add(s);
+    });
+
+    const suggestions = Array.from(combinedSet).slice(0, 8);
+
+    res.json({ suggestions });
+  } catch (err: any) {
+    console.error('getKeywordSuggestions error:', err);
+    res.status(500).json({ error: 'Failed to fetch suggestions' });
+  }
+};
+
+/**
+ * Get recent search history for user
+ */
+export const getSearchHistory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.json({ history: [] });
+      return;
+    }
+
+    // Get latest distinct queries
+    const records = await prisma.searchHistory.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 30,
+    });
+
+    // Deduplicate preserving latest order
+    const seen = new Set<string>();
+    const history: { id: string; query: string; createdAt: Date }[] = [];
+
+    for (const item of records) {
+      const lower = item.query.toLowerCase().trim();
+      if (!seen.has(lower)) {
+        seen.add(lower);
+        history.push({
+          id: item.id,
+          query: item.query,
+          createdAt: item.createdAt,
+        });
+      }
+      if (history.length >= 10) break;
+    }
+
+    res.json({ history });
+  } catch (err: any) {
+    console.error('getSearchHistory error:', err);
+    res.status(500).json({ error: 'Failed to fetch search history' });
+  }
+};
+
+/**
+ * Add query to search history
+ */
+export const addSearchHistory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const query = req.body?.query ? String(req.body.query).trim() : '';
+
+    if (!userId || !query) {
+      res.status(400).json({ error: 'User ID and query are required' });
+      return;
+    }
+
+    const item = await prisma.searchHistory.create({
+      data: {
+        userId,
+        query,
+      },
+    });
+
+    res.json({ success: true, item });
+  } catch (err: any) {
+    console.error('addSearchHistory error:', err);
+    res.status(500).json({ error: 'Failed to record search history' });
+  }
+};
+
+/**
+ * Delete a specific search query or clear all history
+ */
+export const deleteSearchHistory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const { id } = req.params;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const historyId = String(id);
+
+    if (historyId === 'all') {
+      await prisma.searchHistory.deleteMany({
+        where: { userId },
+      });
+      res.json({ success: true, message: 'All search history cleared' });
+      return;
+    }
+
+    await prisma.searchHistory.deleteMany({
+      where: {
+        id: historyId,
+        userId,
+      },
+    });
+
+    res.json({ success: true, message: 'Search history entry deleted' });
+  } catch (err: any) {
+    console.error('deleteSearchHistory error:', err);
+    res.status(500).json({ error: 'Failed to delete search history' });
   }
 };

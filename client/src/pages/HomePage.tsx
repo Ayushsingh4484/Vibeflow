@@ -2,40 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { trackService } from '../services/trackService';
 import { albumService } from '../services/albumService';
-import { artistService } from '../services/artistService';
+import { artistService, CatalogArtistItem } from '../services/artistService';
 import { playlistService } from '../services/playlistService';
-import { jamendoService } from '../services/jamendoService';
-import { Track, Album, Artist, Playlist } from '../types';
+import { Track, Album, Playlist } from '../types';
 import { Card } from '../components/common/Card';
 import { TrackTable } from '../components/common/TrackTable';
 import { CardSkeleton, TrackRowSkeleton } from '../components/common/Skeleton';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { getGreeting } from '../utils/format';
+import { HOME_GENRE_CATEGORIES } from '../constants/genreCategories';
 import {
   Play,
   Sparkles,
   Flame,
   Radio,
-  Disc,
-  Globe,
   Search,
   ChevronRight,
-  Music,
-  Heart,
+  Compass,
+  Users,
 } from 'lucide-react';
 import { AddToPlaylistModal } from '../components/common/AddToPlaylistModal';
-
-const DISCOVER_GENRES = [
-  { label: 'Popular', value: 'popular' },
-  { label: 'Chill Vibes', value: 'chill' },
-  { label: 'Lo-Fi Beats', value: 'lofi' },
-  { label: 'Electronic', value: 'electronic' },
-  { label: 'Rock', value: 'rock' },
-  { label: 'Focus & Study', value: 'focus' },
-  { label: 'Ambient', value: 'ambient' },
-  { label: 'Jazz Night', value: 'jazz' },
-];
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -43,31 +30,35 @@ export const HomePage: React.FC = () => {
   const { playTrack, playQueue } = usePlayerStore();
 
   const [popularTracks, setPopularTracks] = useState<Track[]>([]);
+  const [recommendations, setRecommendations] = useState<Track[]>([]);
   const [albums, setAlbums] = useState<Album[]>([]);
-  const [artists, setArtists] = useState<Artist[]>([]);
+  const [catalogArtists, setCatalogArtists] = useState<CatalogArtistItem[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [recentTracks, setRecentTracks] = useState<Track[]>([]);
-  const [jamendoTracks, setJamendoTracks] = useState<Track[]>([]);
-  const [selectedGenre, setSelectedGenre] = useState<string>('popular');
-  const [jamendoLoading, setJamendoLoading] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(true);
+  const [suggestionsLoading, setSuggestionsLoading] = useState<boolean>(true);
+  const [playingArtistId, setPlayingArtistId] = useState<string | null>(null);
   const [selectedTrackForPlaylist, setSelectedTrackForPlaylist] = useState<Track | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setSuggestionsLoading(true);
       try {
-        const [tracksRes, albumsRes, artistsRes, playlistsRes] = await Promise.all([
+        const [tracksRes, albumsRes, catalogRes, playlistsRes, suggestionsRes] = await Promise.all([
           trackService.getTracks({ limit: 10, sort: 'popular' }),
           albumService.getAlbums({ limit: 8 }),
-          artistService.getArtists({ limit: 8 }),
+          artistService.getCatalog({ limit: 22 } as any),
           playlistService.getPlaylists(8),
+          trackService.getSuggestions().catch(() => ({ recommendations: [], sections: [] })),
         ]);
 
         setPopularTracks(tracksRes.tracks || []);
         setAlbums(albumsRes.albums || []);
-        setArtists(artistsRes.artists || []);
+        setCatalogArtists(catalogRes.artists || []);
         setPlaylists(playlistsRes.playlists || []);
+        setRecommendations(suggestionsRes.recommendations || []);
+        setSuggestionsLoading(false);
 
         const { isAuthenticated } = useAuthStore.getState();
         if (isAuthenticated) {
@@ -86,52 +77,31 @@ export const HomePage: React.FC = () => {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    let isCancelled = false;
-    setJamendoLoading(true);
-
-    const fetchJamendo = async () => {
-      try {
-        let res;
-        if (selectedGenre === 'popular') {
-          res = await jamendoService.getPopular(8);
-        } else {
-          res = await jamendoService.getByGenre(selectedGenre, 8);
-        }
-        if (!isCancelled) {
-          setJamendoTracks(res.tracks || []);
-        }
-      } catch (err) {
-        console.error('Failed to fetch Jamendo tracks:', err);
-        if (!isCancelled) setJamendoTracks([]);
-      } finally {
-        if (!isCancelled) setJamendoLoading(false);
-      }
-    };
-
-    fetchJamendo();
-    return () => {
-      isCancelled = true;
-    };
-  }, [selectedGenre]);
-
   const greeting = getGreeting();
   const userName = user?.name ? user.name.split(' ')[0] : 'Alex';
 
-  // Featured Hero Card item (uses top playlist or fallback)
-  const heroFeatured = playlists[0] || {
-    id: 'hero-1',
-    name: 'Late Night Frequencies',
-    description:
-      'Take a moment to unwind and immerse yourself in a world of soothing melodies, carefully curated to enhance your evening experience.',
-    coverUrl:
-      'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1200&auto=format&fit=crop',
-    tracks: popularTracks,
+  const handlePlayArtist = async (e: React.MouseEvent, artist: CatalogArtistItem) => {
+    e.stopPropagation();
+    setPlayingArtistId(artist.id);
+    try {
+      const res = await artistService.getDynamicArtist(artist.name);
+      if (res.artist?.tracks && res.artist.tracks.length > 0) {
+        playQueue(res.artist.tracks, 0);
+      }
+    } catch (err) {
+      console.error('Failed to play artist tracks:', err);
+    } finally {
+      setPlayingArtistId(null);
+    }
+  };
+
+  const handleSelectCategory = (query: string) => {
+    window.dispatchEvent(new CustomEvent('vibeflow-search', { detail: query }));
   };
 
   return (
-    <div className="flex flex-col gap-8 p-4 sm:p-6 max-w-7xl mx-auto">
-      {/* 1. Top Section: Clean Greeting & Search Bar */}
+    <div className="flex flex-col gap-9 p-4 sm:p-6 max-w-7xl mx-auto pb-14">
+      {/* 0. Top Section: Clean Greeting & Search Bar */}
       <section className="flex flex-col gap-4">
         <div className="flex flex-col">
           <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
@@ -155,68 +125,188 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* 2. Featured Music Section (Cinematic Hero Card inspired by Reference) */}
-      <section className="relative w-full rounded-3xl overflow-hidden shadow-2xl border border-black/5 dark:border-white/10 min-h-[340px] sm:min-h-[380px] flex flex-col justify-between p-6 sm:p-8 bg-zinc-900 text-white group">
-        {/* Background Image with Dark Gradient Overlay */}
-        <img
-          src={
-            heroFeatured.coverUrl ||
-            'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1200&auto=format&fit=crop'
-          }
-          alt={heroFeatured.name}
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter brightness-90"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/30" />
-
-        {/* Top Tag / Badge */}
-        <div className="relative z-10 flex items-center justify-between">
-          <span className="px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-widest bg-white/20 backdrop-blur-md text-white border border-white/20 shadow-md">
-            Mood of the week
-          </span>
-        </div>
-
-        {/* Middle Content */}
-        <div className="relative z-10 flex flex-col gap-2 max-w-xl my-4">
-          <span className="text-xs font-bold uppercase tracking-widest text-red-400">
-            Featured Playlist
-          </span>
-          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight drop-shadow-md">
-            {heroFeatured.name}
-          </h2>
-          <p className="text-xs sm:text-sm text-zinc-300 font-medium line-clamp-2 max-w-lg leading-relaxed">
-            {heroFeatured.description ||
-              'Take a moment to unwind with atmospheric sounds, carefully curated for an unforgettable evening listening session.'}
-          </p>
-        </div>
-
-        {/* Bottom Metadata Pill Bar (Artist Avatar + Track Count + Play Button) */}
-        <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 pt-2">
-          <div className="flex items-center gap-2.5 bg-black/60 backdrop-blur-xl px-4 py-2 rounded-full border border-white/15">
-            <div className="w-7 h-7 rounded-full bg-red-500 flex items-center justify-center font-bold text-xs text-white shadow-md">
-              N
-            </div>
-            <span className="text-xs font-bold text-white tracking-wide">
-              Nova • {heroFeatured.tracks?.length || 12} Tracks
-            </span>
+      {/* 1. Recommended For You */}
+      <section className="flex flex-col gap-3.5">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+              Inspired by your recent activity
+            </p>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-red-500 animate-pulse" />
+              Recommended for you
+            </h2>
           </div>
-
           <button
-            onClick={() => {
-              if (heroFeatured.tracks && heroFeatured.tracks.length > 0) {
-                playQueue(heroFeatured.tracks, 0);
-              } else if (popularTracks.length > 0) {
-                playQueue(popularTracks, 0);
-              }
-            }}
-            className="px-6 py-2.5 rounded-full bg-white hover:bg-red-500 text-slate-900 hover:text-white font-extrabold text-sm shadow-2xl flex items-center gap-2 hover:scale-105 active:scale-95 transition-all duration-300"
+            onClick={() => navigate('/suggestions')}
+            className="text-xs sm:text-sm font-extrabold text-red-500 hover:text-red-400 flex items-center gap-1 transition-colors px-3 py-1.5 rounded-full hover:bg-red-500/10"
           >
-            <Play className="w-4 h-4 fill-current" />
-            <span>Play</span>
+            <span>Show all</span>
+            <ChevronRight className="w-4 h-4" />
           </button>
+        </div>
+
+        {/* Horizontally scrollable row of recommended tracks */}
+        {suggestionsLoading ? (
+          <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-2 px-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="w-40 sm:w-48 shrink-0">
+                <CardSkeleton />
+              </div>
+            ))}
+          </div>
+        ) : recommendations.length === 0 ? (
+          <div className="p-6 rounded-3xl bg-white/50 dark:bg-[#16171e]/50 border border-black/5 dark:border-white/5 text-center text-xs text-zinc-400">
+            Start playing songs to receive tailored recommendations.
+          </div>
+        ) : (
+          <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-2 px-2">
+            {recommendations.map((track) => (
+              <div key={track.id} className="w-40 sm:w-48 shrink-0">
+                <Card
+                  id={track.id}
+                  title={track.title}
+                  subtitle={track.artist?.name || 'Artist'}
+                  imageUrl={track.artworkUrl || track.coverUrl}
+                  type="track"
+                  source={track.source}
+                  onPlay={() => playTrack(track, recommendations)}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 2. Browse All Categories */}
+      <section className="flex flex-col gap-3.5">
+        <div className="flex items-center gap-2">
+          <Compass className="w-5 h-5 text-red-500" />
+          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Browse All Categories
+          </h2>
+        </div>
+
+        {/* Horizontal scrollable row of curated category cards with real images */}
+        <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-2 px-2">
+          {HOME_GENRE_CATEGORIES.map((cat) => (
+            <div
+              key={cat.name}
+              onClick={() => handleSelectCategory(cat.query)}
+              className="group relative w-36 sm:w-44 h-36 sm:h-44 rounded-3xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-black/5 dark:border-white/10 shrink-0 flex flex-col justify-between p-3.5 sm:p-4 select-none bg-zinc-900"
+            >
+              <img
+                src={cat.imageUrl}
+                alt={cat.name}
+                loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out brightness-90 group-hover:brightness-100"
+              />
+              <div className={`absolute inset-0 bg-gradient-to-t ${cat.gradient} opacity-90 group-hover:opacity-80 transition-opacity`} />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-black/80" />
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-20 bg-red-600 transition-opacity duration-300 pointer-events-none" />
+
+              <div className="relative z-10 flex flex-col items-start">
+                <h3 className="text-sm sm:text-base font-black text-white tracking-tight drop-shadow-md group-hover:text-red-400 transition-colors">
+                  {cat.name}
+                </h3>
+                <span className="text-[10px] font-semibold text-zinc-300/90 tracking-wide drop-shadow line-clamp-1 mt-0.5">
+                  {cat.artistHint}
+                </span>
+              </div>
+
+              <div className="relative z-10 self-end">
+                <div className="w-8 h-8 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-lg shadow-red-600/40 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 hover:scale-105 active:scale-95">
+                  <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* 3. Horizontal Carousel: Recently Played */}
+      {/* 3. Browse by Artist (DIRECTLY BELOW BROWSE ALL CATEGORIES) */}
+      <section className="flex flex-col gap-3.5">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+            <Users className="w-5 h-5 text-red-500" />
+            Browse by Artist
+          </h2>
+          <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
+            Find your favorite artists and explore their music.
+          </p>
+        </div>
+
+        {/* Horizontally scrollable row of circular artist portrait cards */}
+        {loading ? (
+          <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-2 px-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="w-36 sm:w-44 shrink-0 flex flex-col items-center gap-2">
+                <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-zinc-800 animate-pulse" />
+                <div className="w-20 h-3 bg-zinc-800 rounded animate-pulse" />
+              </div>
+            ))}
+          </div>
+        ) : catalogArtists.length === 0 ? (
+          <div className="p-6 rounded-3xl bg-white/50 dark:bg-[#16171e]/50 border border-black/5 dark:border-white/5 text-center text-xs text-zinc-400">
+            No artists available.
+          </div>
+        ) : (
+          <div className="flex items-center gap-4 sm:gap-5 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-2 px-2">
+            {catalogArtists.map((artist) => (
+              <div
+                key={artist.id}
+                onClick={() => navigate(`/artist/${encodeURIComponent(artist.name)}`)}
+                className="group relative w-36 sm:w-44 p-3.5 rounded-3xl bg-white dark:bg-[#16171e] hover:bg-zinc-50 dark:hover:bg-[#1f202b] border border-black/5 dark:border-white/5 hover:border-red-500/30 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col items-center text-center shrink-0 select-none"
+              >
+                {/* Circular Portrait with Floating Play Button on Hover */}
+                <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full mb-3 overflow-hidden bg-zinc-800 shadow-md border-2 border-transparent group-hover:border-red-500/50 transition-colors">
+                  <img
+                    src={artist.imageUrl}
+                    alt={artist.name}
+                    loading="lazy"
+                    className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(
+                        artist.name
+                      )}`;
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+
+                  {/* Play Button Revealed on Hover */}
+                  <button
+                    onClick={(e) => handlePlayArtist(e, artist)}
+                    title={`Play ${artist.name}`}
+                    className="absolute bottom-1 right-1 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-xl shadow-red-600/40 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 hover:scale-110 active:scale-95"
+                  >
+                    {playingArtistId === artist.id ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Play className="w-4 h-4 fill-current ml-0.5" />
+                    )}
+                  </button>
+                </div>
+
+                {/* Artist Name & Tag */}
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white group-hover:text-red-500 transition-colors line-clamp-1 w-full">
+                  {artist.name}
+                </h3>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="text-[11px] font-semibold text-zinc-400">
+                    {artist.category}
+                  </span>
+                  <span className="text-zinc-600 dark:text-zinc-500 text-xs">•</span>
+                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+                    {artist.region}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 4. Horizontal Carousel: Recently Played */}
       {recentTracks.length > 0 && (
         <section className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
@@ -249,73 +339,19 @@ export const HomePage: React.FC = () => {
         </section>
       )}
 
-      {/* 4. Horizontal Carousel: Discover Jamendo Music */}
-      <section className="flex flex-col gap-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <div className="flex items-center gap-2">
-              <Globe className="w-5 h-5 text-amber-500" />
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-                Discover Online Music
-              </h2>
-            </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Explore independent tracks streamed directly from Jamendo
-            </p>
-          </div>
 
-          {/* Genre Pill Filter Buttons */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-            {DISCOVER_GENRES.map((g) => (
-              <button
-                key={g.value}
-                onClick={() => setSelectedGenre(g.value)}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
-                  selectedGenre === g.value
-                    ? 'bg-red-500 text-white shadow-md shadow-red-500/20'
-                    : 'bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-700 dark:text-zinc-300'
-                }`}
-              >
-                {g.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {jamendoLoading ? (
-          <div className="flex gap-4 overflow-x-auto no-scrollbar py-2">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="w-40 sm:w-48 shrink-0">
-                <CardSkeleton />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-2 px-2">
-            {jamendoTracks.map((track) => (
-              <div key={track.id} className="w-40 sm:w-48 shrink-0">
-                <Card
-                  id={track.id}
-                  title={track.title}
-                  subtitle={track.artist?.name || 'Jamendo Artist'}
-                  imageUrl={track.artworkUrl || track.coverUrl}
-                  type="track"
-                  source="jamendo"
-                  onPlay={() => playTrack(track, jamendoTracks)}
-                />
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* 5. Popular Songs Table Section */}
+      {/* 6. Popular & YouTube Trending Songs Table Section */}
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <Flame className="w-5 h-5 text-amber-500" />
-            Popular Tracks
-          </h2>
+          <div className="flex items-center gap-2.5">
+            <Flame className="w-5 h-5 text-red-500 animate-pulse" />
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+              Popular & YouTube Trending
+            </h2>
+            <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-red-600/15 text-red-600 dark:text-red-400 border border-red-500/20">
+              Top 10 Live
+            </span>
+          </div>
           {popularTracks.length > 0 && (
             <button
               onClick={() => playQueue(popularTracks, 0)}
@@ -342,7 +378,7 @@ export const HomePage: React.FC = () => {
         )}
       </section>
 
-      {/* 6. Trending Albums Horizontal Carousel */}
+      {/* 7. Trending Albums Horizontal Carousel */}
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight">
@@ -370,43 +406,6 @@ export const HomePage: React.FC = () => {
                       albumService.getAlbumById(alb.id).then((res) => {
                         if (res.album.tracks && res.album.tracks.length > 0) {
                           playQueue(res.album.tracks, 0);
-                        }
-                      });
-                    }}
-                  />
-                </div>
-              ))}
-        </div>
-      </section>
-
-      {/* 7. Popular Artists Horizontal Carousel */}
-      <section className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-            Popular Artists
-          </h2>
-        </div>
-
-        <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-2 px-2">
-          {loading
-            ? Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="w-40 sm:w-48 shrink-0">
-                  <CardSkeleton />
-                </div>
-              ))
-            : artists.map((art) => (
-                <div key={art.id} className="w-40 sm:w-48 shrink-0">
-                  <Card
-                    id={art.id}
-                    title={art.name}
-                    subtitle="Artist"
-                    imageUrl={art.imageUrl}
-                    type="artist"
-                    linkTo={`/artist/${art.id}`}
-                    onPlay={() => {
-                      artistService.getArtistById(art.id).then((res) => {
-                        if (res.artist.tracks && res.artist.tracks.length > 0) {
-                          playQueue(res.artist.tracks, 0);
                         }
                       });
                     }}

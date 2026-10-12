@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import prisma from '../config/prisma';
 import { StorageService } from '../services/storageService';
+import { ARTIST_CATALOG } from '../constants/artistCatalog';
+import { YouTubeService } from '../services/youtubeService';
 
 export const getArtists = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -148,5 +150,113 @@ export const deleteArtist = async (req: Request, res: Response): Promise<void> =
   } catch (error: any) {
     console.error('deleteArtist error:', error);
     res.status(500).json({ error: 'Failed to delete artist.' });
+  }
+};
+
+/**
+ * GET /api/artists/catalog
+ * Returns curated Indian & International artists with categories and images
+ */
+export const getArtistCatalog = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { category, region, search } = req.query;
+    let artists = [...ARTIST_CATALOG];
+
+    if (category && typeof category === 'string' && category !== 'All') {
+      artists = artists.filter((a) => a.category.toLowerCase() === category.toLowerCase());
+    }
+
+    if (region && typeof region === 'string' && region !== 'All') {
+      artists = artists.filter((a) => a.region.toLowerCase() === region.toLowerCase());
+    }
+
+    if (search && typeof search === 'string') {
+      const q = search.toLowerCase().trim();
+      artists = artists.filter(
+        (a) => a.name.toLowerCase().includes(q) || a.category.toLowerCase().includes(q)
+      );
+    }
+
+    res.json({ artists });
+  } catch (error: any) {
+    console.error('getArtistCatalog error:', error);
+    res.status(500).json({ error: 'Failed to fetch artist catalog.' });
+  }
+};
+
+/**
+ * GET /api/artists/details/:query
+ * Fetches dynamic artist profile, YouTube popular tracks, and official playlists
+ */
+export const getDynamicArtistDetails = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const query = decodeURIComponent(String(req.params.query || '')).trim();
+    if (!query) {
+      res.status(400).json({ error: 'Artist name or query is required' });
+      return;
+    }
+
+    // Check catalog first for curated metadata
+    const catalogItem = ARTIST_CATALOG.find(
+      (a) => a.name.toLowerCase() === query.toLowerCase() || a.id === query.toLowerCase()
+    );
+
+    const displayName = catalogItem ? catalogItem.name : query;
+    const displayImage = catalogItem ? catalogItem.imageUrl : undefined;
+    const displayBio = catalogItem ? catalogItem.bio : `Explore music, popular hits, and curated playlists by ${displayName}.`;
+
+    // Fetch songs and playlists in parallel via YouTubeService
+    const [ytTracks, ytPlaylists] = await Promise.all([
+      YouTubeService.searchTracks(`${displayName} official song`, 15).catch(() => []),
+      YouTubeService.searchArtistPlaylists(displayName, 8).catch(() => []),
+    ]);
+
+    // Format songs into artist format
+    const formattedTracks = ytTracks.map((t) => ({
+      ...t,
+      artist: {
+        id: catalogItem?.id || `yt-${encodeURIComponent(displayName)}`,
+        name: displayName,
+        imageUrl: displayImage || t.artworkUrl,
+      },
+    }));
+
+    res.json({
+      artist: {
+        id: catalogItem?.id || `dynamic-${encodeURIComponent(displayName)}`,
+        name: displayName,
+        bio: displayBio,
+        imageUrl: displayImage || formattedTracks[0]?.artworkUrl || `https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80`,
+        category: catalogItem?.category || 'Music',
+        region: catalogItem?.region || 'International',
+        monthlyListeners: catalogItem?.monthlyListeners || '10M+',
+        tracks: formattedTracks,
+        playlists: ytPlaylists,
+        albums: [],
+      },
+    });
+  } catch (error: any) {
+    console.error('getDynamicArtistDetails error:', error);
+    res.status(500).json({ error: 'Failed to fetch dynamic artist details.' });
+  }
+};
+
+/**
+ * GET /api/artists/playlist/:id
+ * Fetches tracks belonging to an artist YouTube playlist
+ */
+export const getArtistPlaylistTracks = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const playlistId = String(req.params.id);
+    if (!playlistId) {
+      res.status(400).json({ error: 'Playlist ID is required' });
+      return;
+    }
+
+    const tracks = await YouTubeService.getPlaylistTracks(playlistId, 25);
+    res.json({ tracks });
+  } catch (error: any) {
+    console.error('getArtistPlaylistTracks error:', error);
+    res.status(500).json({ error: 'Failed to fetch playlist tracks.' });
   }
 };

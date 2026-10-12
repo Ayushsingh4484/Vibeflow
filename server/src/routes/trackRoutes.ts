@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import {
   getTracks,
+  getTrendingTracks,
+  getSuggestions,
   getTrackById,
   createTrack,
   updateTrack,
@@ -15,6 +17,8 @@ import { uploadMedia } from '../middleware/upload';
 const router = Router();
 
 router.get('/', optionalAuthenticate, getTracks);
+router.get('/trending', optionalAuthenticate, getTrendingTracks);
+router.get('/suggestions', optionalAuthenticate, getSuggestions);
 router.get('/:id', optionalAuthenticate, getTrackById);
 router.post(
   '/',

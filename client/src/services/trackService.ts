@@ -33,4 +33,9 @@ export const trackService = {
   getRecentlyPlayed: () => apiClient.get<{ tracks: Track[] }>('/users/recently-played'),
 
   getLikedTracks: () => apiClient.get<{ tracks: Track[]; total: number }>('/users/liked-tracks'),
+
+  getTrendingTracks: (limit: number = 10) => apiClient.get<{ tracks: Track[] }>(`/tracks/trending?limit=${limit}`),
+
+  getSuggestions: () => apiClient.get<{ recommendations: Track[]; sections: any[] }>('/tracks/suggestions'),
 };
+

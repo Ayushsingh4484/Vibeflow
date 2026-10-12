@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   Home,
-  Compass,
   Library,
+  Sparkles,
   Heart,
   Clock,
   PlusSquare,
@@ -70,14 +70,14 @@ export const Sidebar: React.FC = () => {
               <span>Home</span>
             </NavLink>
 
-            <NavLink to="/search" className={navLinkClass}>
-              <Compass className="w-5 h-5" />
-              <span>Browse</span>
-            </NavLink>
-
             <NavLink to="/library" className={navLinkClass}>
               <Library className="w-5 h-5" />
               <span>Library</span>
+            </NavLink>
+
+            <NavLink to="/suggestions" className={navLinkClass}>
+              <Sparkles className="w-5 h-5 text-red-500" />
+              <span>Suggestions</span>
             </NavLink>
           </nav>
         </div>

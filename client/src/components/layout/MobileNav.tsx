@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Compass, Library, User, ShieldCheck } from 'lucide-react';
+import { Home, Library, User, ShieldCheck } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 
 export const MobileNav: React.FC = () => {
@@ -18,11 +18,6 @@ export const MobileNav: React.FC = () => {
       <NavLink to="/" className={getLinkClass}>
         <Home className="w-4 h-4" />
         <span className="text-[10px]">Home</span>
-      </NavLink>
-
-      <NavLink to="/search" className={getLinkClass}>
-        <Compass className="w-4 h-4" />
-        <span className="text-[10px]">Browse</span>
       </NavLink>
 
       <NavLink to="/library" className={getLinkClass}>

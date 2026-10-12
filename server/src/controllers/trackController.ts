@@ -4,6 +4,8 @@ import path from 'path';
 import prisma from '../config/prisma';
 import { StorageService, AUDIO_DIR } from '../services/storageService';
 import { JamendoService } from '../services/jamendoService';
+import { YouTubeService } from '../services/youtubeService';
+import { RecommendationService } from '../services/recommendationService';
 
 // Helper to ensure a Jamendo track exists in the DB for relational likes/playlists/history
 async function ensureTrackExists(trackId: string, trackData?: any) {
@@ -121,12 +123,72 @@ export const getTracks = async (req: Request, res: Response): Promise<void> => {
       likedBy: undefined,
     }));
 
-    res.json({ tracks: formattedTracks, total });
+    // If fetching popular tracks without specific filter, prepend top trending YouTube music
+    let resultTracks = formattedTracks;
+    if (sort === 'popular' && !genre && !artistId && !albumId && !search && parseInt(String(offset), 10) === 0) {
+      try {
+        const trendingYt = await YouTubeService.getTrendingMusic(10);
+        if (trendingYt.length > 0) {
+          // Check liked status for trending YouTube tracks if user logged in
+          let formattedYt = trendingYt;
+          if (userId) {
+            const ytIds = trendingYt.map((t) => t.id);
+            const liked = await prisma.likedTrack.findMany({
+              where: { userId, trackId: { in: ytIds } },
+              select: { trackId: true },
+            });
+            const likedSet = new Set(liked.map((l) => l.trackId));
+            formattedYt = trendingYt.map((t) => ({ ...t, isLiked: likedSet.has(t.id) }));
+          }
+          resultTracks = [...formattedYt, ...formattedTracks];
+        }
+      } catch (ytErr) {
+        console.warn('Failed to merge YouTube trending tracks:', ytErr);
+      }
+    }
+
+    res.json({ tracks: resultTracks, total: total + (resultTracks.length - formattedTracks.length) });
   } catch (error: any) {
     console.error('getTracks error:', error);
     res.status(500).json({ error: 'Failed to fetch tracks.' });
   }
 };
+
+export const getTrendingTracks = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const limit = parseInt(String(req.query.limit || '10'), 10);
+    const userId = req.user?.id;
+    const trending = await YouTubeService.getTrendingMusic(limit);
+
+    let formatted = trending;
+    if (userId && trending.length > 0) {
+      const ytIds = trending.map((t) => t.id);
+      const liked = await prisma.likedTrack.findMany({
+        where: { userId, trackId: { in: ytIds } },
+        select: { trackId: true },
+      });
+      const likedSet = new Set(liked.map((l) => l.trackId));
+      formatted = trending.map((t) => ({ ...t, isLiked: likedSet.has(t.id) }));
+    }
+
+    res.json({ tracks: formatted });
+  } catch (error: any) {
+    console.error('getTrendingTracks error:', error);
+    res.status(500).json({ error: 'Failed to fetch trending tracks.' });
+  }
+};
+
+export const getSuggestions = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const result = await RecommendationService.getPersonalizedSuggestions(userId);
+    res.json(result);
+  } catch (error: any) {
+    console.error('getSuggestions error:', error);
+    res.status(500).json({ error: 'Failed to fetch suggestions.' });
+  }
+};
+
 
 export const getTrackById = async (req: Request, res: Response): Promise<void> => {
   try {

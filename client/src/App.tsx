@@ -9,11 +9,13 @@ import { RecentlyPlayedPage } from './pages/RecentlyPlayedPage';
 import { PlaylistPage } from './pages/PlaylistPage';
 import { AlbumPage } from './pages/AlbumPage';
 import { ArtistPage } from './pages/ArtistPage';
+import { ArtistsPage } from './pages/ArtistsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AdminPage } from './pages/AdminPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { SuggestionsPage } from './pages/SuggestionsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { useAuthStore } from './store/useAuthStore';
 
@@ -34,6 +36,11 @@ export const AppContent: React.FC = () => {
     return () => window.removeEventListener('vibeflow-search', handleCategorySearch);
   }, []);
 
+  const handleSelectSearch = (query: string) => {
+    setSearchQuery(query);
+    navigate('/search');
+  };
+
   return (
     <Routes>
       <Route
@@ -41,16 +48,27 @@ export const AppContent: React.FC = () => {
           <MainLayout
             searchQuery={searchQuery}
             onSearchChange={(val) => setSearchQuery(val)}
+            onSearchSelect={handleSelectSearch}
           />
         }
       >
         <Route path="/" element={<HomePage />} />
-        <Route path="/search" element={<SearchPage searchQuery={searchQuery} />} />
+        <Route
+          path="/search"
+          element={
+            <SearchPage
+              searchQuery={searchQuery}
+              onSearchChange={(val) => setSearchQuery(val)}
+            />
+          }
+        />
         <Route path="/library" element={<LibraryPage />} />
+        <Route path="/suggestions" element={<SuggestionsPage />} />
         <Route path="/liked" element={<LikedSongsPage />} />
         <Route path="/recently-played" element={<RecentlyPlayedPage />} />
         <Route path="/playlist/:id" element={<PlaylistPage />} />
         <Route path="/album/:id" element={<AlbumPage />} />
+        <Route path="/artists" element={<ArtistsPage />} />
         <Route path="/artist/:id" element={<ArtistPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/settings" element={<SettingsPage />} />

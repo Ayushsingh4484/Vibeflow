@@ -4,41 +4,140 @@ import { SearchResults, Track } from '../types';
 import { Card } from '../components/common/Card';
 import { TrackRow } from '../components/common/TrackRow';
 import { usePlayerStore } from '../store/usePlayerStore';
-import { Play, Search, Compass, Globe, Music, Disc } from 'lucide-react';
+import { Play, Search, Compass, Globe, Music, Disc, Sparkles } from 'lucide-react';
 import { AddToPlaylistModal } from '../components/common/AddToPlaylistModal';
+import { useAuthStore } from '../store/useAuthStore';
 
 interface SearchPageProps {
   searchQuery: string;
+  onSearchChange?: (val: string) => void;
 }
 
-const GENRE_CARDS = [
-  { name: 'Electronic', color: 'from-blue-600 to-indigo-800' },
-  { name: 'Chill Vibes', color: 'from-sky-500 to-indigo-700' },
-  { name: 'Lo-Fi Beats', color: 'from-amber-600 to-rose-800' },
-  { name: 'Rock', color: 'from-red-600 to-rose-900' },
-  { name: 'Pop', color: 'from-pink-500 to-rose-600' },
-  { name: 'Jazz', color: 'from-yellow-600 to-amber-900' },
-  { name: 'Ambient', color: 'from-cyan-600 to-blue-800' },
-  { name: 'Focus & Study', color: 'from-teal-600 to-emerald-900' },
-  { name: 'Workout Mix', color: 'from-orange-500 to-amber-700' },
-  { name: 'Acoustic', color: 'from-emerald-700 to-green-900' },
-  { name: 'Synthwave', color: 'from-pink-600 to-purple-800' },
-  { name: 'Cyberpunk', color: 'from-violet-600 to-fuchsia-900' },
+export interface GenreCategory {
+  name: string;
+  query: string;
+  imageUrl: string;
+  artistHint: string;
+  gradient: string;
+}
+
+const GENRE_CARDS: GenreCategory[] = [
+  {
+    name: 'Electronic',
+    query: 'Electronic',
+    imageUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format&fit=crop&q=80',
+    artistHint: 'EDM & House Anthems',
+    gradient: 'from-blue-950/80 via-black/40 to-transparent',
+  },
+  {
+    name: 'Chill Vibes',
+    query: 'Chill',
+    imageUrl: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=600&auto=format&fit=crop&q=80',
+    artistHint: 'Relaxed Melodies',
+    gradient: 'from-cyan-950/80 via-black/40 to-transparent',
+  },
+  {
+    name: 'Lo-Fi Beats',
+    query: 'Lo-Fi',
+    imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80',
+    artistHint: 'Late Night Study Beats',
+    gradient: 'from-amber-950/80 via-black/40 to-transparent',
+  },
+  {
+    name: 'Rock',
+    query: 'Rock',
+    imageUrl: 'https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=600&auto=format&fit=crop&q=80',
+    artistHint: 'Classic & Modern Rock',
+    gradient: 'from-red-950/80 via-black/40 to-transparent',
+  },
+  {
+    name: 'Pop',
+    query: 'Pop',
+    imageUrl: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=600&auto=format&fit=crop&q=80',
+    artistHint: 'Chart-Topping Hits',
+    gradient: 'from-pink-950/80 via-black/40 to-transparent',
+  },
+  {
+    name: 'Jazz',
+    query: 'Jazz',
+    imageUrl: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=600&auto=format&fit=crop&q=80',
+    artistHint: 'Smooth Brass & Keys',
+    gradient: 'from-yellow-950/80 via-black/40 to-transparent',
+  },
+  {
+    name: 'Ambient',
+    query: 'Ambient',
+    imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&auto=format&fit=crop&q=80',
+    artistHint: 'Deep Soundscapes',
+    gradient: 'from-sky-950/80 via-black/40 to-transparent',
+  },
+  {
+    name: 'Focus & Study',
+    query: 'Focus',
+    imageUrl: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=600&auto=format&fit=crop&q=80',
+    artistHint: 'Calm Instrumental',
+    gradient: 'from-emerald-950/80 via-black/40 to-transparent',
+  },
+  {
+    name: 'Workout Mix',
+    query: 'Workout',
+    imageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=600&auto=format&fit=crop&q=80',
+    artistHint: 'High-Energy Beats',
+    gradient: 'from-orange-950/80 via-black/40 to-transparent',
+  },
+  {
+    name: 'Acoustic',
+    query: 'Acoustic',
+    imageUrl: 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=600&auto=format&fit=crop&q=80',
+    artistHint: 'Raw Guitars & Vocals',
+    gradient: 'from-stone-950/80 via-black/40 to-transparent',
+  },
+  {
+    name: 'Synthwave',
+    query: 'Synthwave',
+    imageUrl: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&auto=format&fit=crop&q=80',
+    artistHint: 'Retro Neon Wave',
+    gradient: 'from-fuchsia-950/80 via-black/40 to-transparent',
+  },
+  {
+    name: 'Cyberpunk',
+    query: 'Cyberpunk',
+    imageUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600&auto=format&fit=crop&q=80',
+    artistHint: 'Dark Dystopian Bass',
+    gradient: 'from-purple-950/80 via-black/40 to-transparent',
+  },
 ];
 
-export const SearchPage: React.FC<SearchPageProps> = ({ searchQuery }) => {
+export const SearchPage: React.FC<SearchPageProps> = ({ searchQuery, onSearchChange }) => {
   const [results, setResults] = useState<SearchResults | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [selectedTrackForPlaylist, setSelectedTrackForPlaylist] = useState<Track | null>(null);
 
+  // Quick Suggestions
+  const [keywordSuggestions, setKeywordSuggestions] = useState<string[]>([]);
+  const [suggestLoading, setSuggestLoading] = useState(false);
+
   const { playTrack, playQueue } = usePlayerStore();
 
+  // Fetch Keyword Suggestions as query changes
   useEffect(() => {
     if (!searchQuery.trim()) {
       setResults(null);
+      setKeywordSuggestions([]);
       return;
     }
 
+    // Fast keyword suggestion fetch
+    setSuggestLoading(true);
+    searchService
+      .getKeywordSuggestions(searchQuery.trim())
+      .then((res) => {
+        setKeywordSuggestions(res.suggestions || []);
+      })
+      .catch(() => setKeywordSuggestions([]))
+      .finally(() => setSuggestLoading(false));
+
+    // Full search debounce
     const timer = setTimeout(() => {
       setLoading(true);
       searchService
@@ -55,6 +154,14 @@ export const SearchPage: React.FC<SearchPageProps> = ({ searchQuery }) => {
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  const handleSelectQuery = (q: string) => {
+    if (onSearchChange) {
+      onSearchChange(q);
+    } else {
+      window.dispatchEvent(new CustomEvent('vibeflow-search', { detail: q }));
+    }
+  };
 
   const hasLocalTracks = results?.tracks && results.tracks.length > 0;
   const hasOnlineTracks = results?.onlineTracks && results.onlineTracks.length > 0;
@@ -73,7 +180,29 @@ export const SearchPage: React.FC<SearchPageProps> = ({ searchQuery }) => {
 
   return (
     <div className="flex flex-col gap-8 p-4 sm:p-6 max-w-7xl mx-auto">
-      {/* If no query, display Browse Categories */}
+      {/* Quick Suggestion Chips while searching */}
+      {searchQuery.trim() && keywordSuggestions.length > 0 && (
+        <section className="flex flex-col gap-2 -mb-2">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-zinc-400">
+            <Sparkles className="w-3.5 h-3.5 text-red-500" />
+            <span>Keyword Suggestions</span>
+          </div>
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+            {keywordSuggestions.map((item, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSelectQuery(item)}
+                className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-black/5 dark:bg-white/10 hover:bg-red-500 hover:text-white dark:hover:bg-red-500 text-slate-700 dark:text-zinc-300 border border-black/5 dark:border-white/10 transition-all flex items-center gap-1.5 whitespace-nowrap shadow-sm"
+              >
+                <Search className="w-3 h-3 opacity-60" />
+                <span>{item}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* If no query: display Browse Categories */}
       {!searchQuery.trim() ? (
         <section className="flex flex-col gap-6">
           <div className="flex items-center gap-2">
@@ -83,19 +212,44 @@ export const SearchPage: React.FC<SearchPageProps> = ({ searchQuery }) => {
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-5">
             {GENRE_CARDS.map((cat) => (
               <div
                 key={cat.name}
-                onClick={() => {
-                  window.dispatchEvent(new CustomEvent('vibeflow-search', { detail: cat.name }));
-                }}
-                className={`relative aspect-square rounded-3xl p-5 bg-gradient-to-br ${cat.color} overflow-hidden shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer border border-white/10 group flex flex-col justify-between`}
+                onClick={() => handleSelectQuery(cat.query)}
+                className="group relative aspect-square rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-white/10 flex flex-col justify-between p-4 sm:p-5 select-none bg-zinc-900"
               >
-                <h3 className="text-lg font-extrabold text-white tracking-tight group-hover:scale-105 transition-transform">
-                  {cat.name}
-                </h3>
-                <div className="absolute -bottom-4 -right-4 w-20 h-20 rounded-full bg-white/15 blur-sm" />
+                {/* Real Music / Genre Background Image */}
+                <img
+                  src={cat.imageUrl}
+                  alt={cat.name}
+                  loading="lazy"
+                  className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out brightness-90 group-hover:brightness-100"
+                />
+
+                {/* Multi-Stop Dark Gradient Overlay to ensure crisp typography readability */}
+                <div className={`absolute inset-0 bg-gradient-to-t ${cat.gradient} opacity-90 group-hover:opacity-80 transition-opacity`} />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-black/80" />
+
+                {/* Subtle Red Brand Glow on Hover */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-20 bg-red-600 transition-opacity duration-300 pointer-events-none" />
+
+                {/* Top: Category Title */}
+                <div className="relative z-10 flex flex-col items-start">
+                  <h3 className="text-base sm:text-lg font-black text-white tracking-tight drop-shadow-md group-hover:text-red-400 transition-colors">
+                    {cat.name}
+                  </h3>
+                  <span className="text-[10px] sm:text-[11px] font-semibold text-zinc-300/90 tracking-wide drop-shadow mt-0.5 line-clamp-1">
+                    {cat.artistHint}
+                  </span>
+                </div>
+
+                {/* Bottom Right: Play Button Icon Overlay on hover */}
+                <div className="relative z-10 self-end">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-red-500 hover:bg-red-400 text-white flex items-center justify-center shadow-lg shadow-red-500/40 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 hover:scale-105 active:scale-95">
+                    <Play className="w-4 h-4 fill-current ml-0.5" />
+                  </div>
+                </div>
               </div>
             ))}
           </div>

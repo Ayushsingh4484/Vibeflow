@@ -195,6 +195,14 @@ export const Player: React.FC = () => {
           </div>
 
           <button
+            onClick={() => setIsNowPlayingOpen(true)}
+            className="p-2 rounded-full transition-colors text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10"
+            title="Open Split-Screen Player"
+          >
+            <Maximize2 className="w-4 h-4" />
+          </button>
+
+          <button
             onClick={() => setIsQueueOpen(!isQueueOpen)}
             className={`p-2 rounded-full transition-colors ${
               isQueueOpen ? 'text-red-500 bg-red-500/10' : 'text-zinc-400 hover:text-slate-900 dark:hover:text-white'
