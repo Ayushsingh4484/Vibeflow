@@ -231,22 +231,22 @@ export const SearchPage: React.FC<SearchPageProps> = ({ searchQuery }) => {
             )}
           </div>
 
-          {/* Online Music Section (Jamendo Catalog) */}
+          {/* Online Music Section (YouTube & Jamendo Catalog) */}
           {hasOnlineTracks && (
             <section className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Globe className="w-5 h-5 text-amber-500" />
+                  <Globe className="w-5 h-5 text-red-500" />
                   <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-                    Online Catalog
+                    Online & YouTube Music
                   </h2>
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/20">
-                    Jamendo
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20">
+                    Online Catalog
                   </span>
                 </div>
                 <button
                   onClick={() => playQueue(results.onlineTracks!, 0)}
-                  className="text-xs font-bold text-amber-500 hover:text-amber-600 uppercase tracking-wider"
+                  className="text-xs font-bold text-red-500 hover:text-red-600 uppercase tracking-wider"
                 >
                   Play All Online
                 </button>

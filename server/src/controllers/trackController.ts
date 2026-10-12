@@ -20,11 +20,11 @@ async function ensureTrackExists(trackId: string, trackData?: any) {
     return existing;
   }
 
-  let title = trackData?.title || 'Jamendo Track';
-  let artistName = trackData?.artist?.name || trackData?.artistName || 'Jamendo Artist';
-  let audioUrl = trackData?.audioUrl || '';
-  let duration = trackData?.duration || 180;
-  let genre = trackData?.genre || 'Creative Commons';
+  let title = trackData?.title || (trackId.startsWith('yt-') ? 'YouTube Song' : 'Jamendo Track');
+  let artistName = trackData?.artist?.name || trackData?.artistName || (trackId.startsWith('yt-') ? 'YouTube Artist' : 'Jamendo Artist');
+  let audioUrl = trackData?.audioUrl || (trackId.startsWith('yt-') ? `https://www.youtube.com/watch?v=${trackId.replace(/^yt-/, '')}` : '');
+  let duration = trackData?.duration || 210;
+  let genre = trackData?.genre || (trackId.startsWith('yt-') ? 'YouTube' : 'Creative Commons');
 
   if ((!audioUrl || !coverUrl) && trackId.startsWith('jamendo-')) {
     const remote = await JamendoService.getTrackById(trackId);
@@ -36,6 +36,11 @@ async function ensureTrackExists(trackId: string, trackData?: any) {
       duration = remote.duration;
       genre = remote.genre || genre;
     }
+  }
+
+  if (trackId.startsWith('yt-') && !coverUrl) {
+    const vid = trackId.replace(/^yt-/, '');
+    coverUrl = `https://img.youtube.com/vi/${vid}/hqdefault.jpg`;
   }
 
   if (!audioUrl) return null;

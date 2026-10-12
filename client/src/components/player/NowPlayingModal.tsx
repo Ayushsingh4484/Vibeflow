@@ -100,6 +100,11 @@ export const NowPlayingModal: React.FC = () => {
               Jamendo Catalog
             </span>
           )}
+          {currentTrack.source === 'youtube' && (
+            <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-red-600/90 backdrop-blur-md text-white border border-red-500/40">
+              YouTube Music
+            </span>
+          )}
         </div>
 
         {/* Track Title, Artist, & Favorite Button */}

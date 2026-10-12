@@ -8,7 +8,7 @@ interface CardProps {
   subtitle?: string;
   imageUrl?: string | null;
   type?: 'album' | 'artist' | 'playlist' | 'track';
-  source?: 'local' | 'jamendo';
+  source?: 'local' | 'jamendo' | 'youtube';
   badge?: string;
   linkTo?: string;
   onPlay?: (e: React.MouseEvent) => void;
@@ -63,9 +63,15 @@ export const Card: React.FC<CardProps> = ({
         )}
 
         {/* Source Badge */}
-        {(badge || source === 'jamendo') && (
-          <span className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-black/70 backdrop-blur-md text-amber-300 border border-amber-500/30 tracking-wider uppercase">
-            {badge || 'Jamendo'}
+        {(badge || source === 'jamendo' || source === 'youtube') && (
+          <span
+            className={`absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold backdrop-blur-md border tracking-wider uppercase ${
+              source === 'youtube'
+                ? 'bg-red-600/80 text-white border-red-500/40'
+                : 'bg-black/70 text-amber-300 border-amber-500/30'
+            }`}
+          >
+            {badge || (source === 'youtube' ? 'YouTube' : 'Jamendo')}
           </span>
         )}
 

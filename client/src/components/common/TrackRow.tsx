@@ -34,6 +34,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
 
   const isCurrent = currentTrack?.id === track.id;
   const isJamendo = track.source === 'jamendo' || track.id.startsWith('jamendo-');
+  const isYouTube = track.source === 'youtube' || track.id.startsWith('yt-');
 
   const handlePlayClick = () => {
     if (isCurrent) {
@@ -127,6 +128,11 @@ export const TrackRow: React.FC<TrackRowProps> = ({
             {isJamendo && (
               <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-600 dark:text-amber-300 font-bold border border-amber-500/20 shrink-0">
                 Jamendo
+              </span>
+            )}
+            {isYouTube && (
+              <span className="text-[9px] px-1.5 py-0.2 rounded bg-red-600/15 text-red-600 dark:text-red-400 font-bold border border-red-500/30 shrink-0">
+                YouTube
               </span>
             )}
           </div>

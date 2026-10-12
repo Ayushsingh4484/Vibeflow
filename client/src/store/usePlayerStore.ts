@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Track, RepeatMode } from '../types';
 import { trackService } from '../services/trackService';
+import { youtubeBridge } from '../services/youtubePlayer';
 
 interface PlayerState {
   currentTrack: Track | null;
@@ -36,7 +37,7 @@ interface PlayerState {
   toggleLikeCurrentTrack: () => Promise<void>;
 }
 
-// Global Audio Singleton
+// Global Audio Singleton for Local / Jamendo MP3 files
 let audio: HTMLAudioElement | null = null;
 let playLoggedTrackId: string | null = null;
 let playLogTimer: any = null;
@@ -46,21 +47,39 @@ if (typeof window !== 'undefined') {
   audio.preload = 'metadata';
 }
 
+function extractYouTubeId(track: Track): string | null {
+  if (track.youtubeId) return track.youtubeId;
+  if (track.id.startsWith('yt-')) return track.id.replace(/^yt-/, '');
+  if (track.audioUrl) {
+    const match = track.audioUrl.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (match) return match[1];
+  }
+  return null;
+}
+
 export const usePlayerStore = create<PlayerState>((set, get) => {
-  // Setup audio listeners once
+  // Setup HTML5 Audio listeners
   if (audio) {
     audio.addEventListener('timeupdate', () => {
-      set({ currentTime: audio?.currentTime || 0 });
+      const { currentTrack } = get();
+      if (!currentTrack || currentTrack.source !== 'youtube') {
+        set({ currentTime: audio?.currentTime || 0 });
+      }
     });
 
     audio.addEventListener('loadedmetadata', () => {
-      if (audio && audio.duration && !isNaN(audio.duration) && audio.duration !== Infinity) {
-        set({ duration: audio.duration });
+      const { currentTrack } = get();
+      if (!currentTrack || currentTrack.source !== 'youtube') {
+        if (audio && audio.duration && !isNaN(audio.duration) && audio.duration !== Infinity) {
+          set({ duration: audio.duration });
+        }
       }
     });
 
     audio.addEventListener('ended', () => {
-      const { repeat, nextTrack } = get();
+      const { currentTrack, repeat, nextTrack } = get();
+      if (currentTrack?.source === 'youtube') return;
+
       if (repeat === 'one') {
         if (audio) {
           audio.currentTime = 0;
@@ -72,17 +91,58 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     });
 
     audio.addEventListener('play', () => {
-      set({ isPlaying: true });
+      const { currentTrack } = get();
+      if (!currentTrack || currentTrack.source !== 'youtube') {
+        set({ isPlaying: true });
+      }
     });
 
     audio.addEventListener('pause', () => {
-      set({ isPlaying: false });
+      const { currentTrack } = get();
+      if (!currentTrack || currentTrack.source !== 'youtube') {
+        set({ isPlaying: false });
+      }
     });
 
     audio.addEventListener('error', (e) => {
-      console.warn('Audio playback error:', e);
-      set({ isPlaying: false });
+      const { currentTrack } = get();
+      if (currentTrack?.source !== 'youtube') {
+        console.warn('Audio playback error:', e);
+        set({ isPlaying: false });
+      }
     });
+  }
+
+  // Setup YouTube Bridge listeners
+  if (typeof window !== 'undefined') {
+    youtubeBridge.onTimeUpdate = (current, total) => {
+      const { currentTrack } = get();
+      if (currentTrack?.source === 'youtube') {
+        set({
+          currentTime: current,
+          ...(total > 0 ? { duration: total } : {}),
+        });
+      }
+    };
+
+    youtubeBridge.onStateChange = (isPlaying) => {
+      const { currentTrack } = get();
+      if (currentTrack?.source === 'youtube') {
+        set({ isPlaying });
+      }
+    };
+
+    youtubeBridge.onEnded = () => {
+      const { currentTrack, repeat, nextTrack } = get();
+      if (currentTrack?.source !== 'youtube') return;
+
+      if (repeat === 'one') {
+        const ytId = extractYouTubeId(currentTrack);
+        if (ytId) youtubeBridge.playVideo(ytId, get().isMuted ? 0 : get().volume);
+      } else {
+        nextTrack();
+      }
+    };
   }
 
   const updateMediaSession = (track: Track) => {
@@ -136,8 +196,6 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     playTrack: (track: Track, newQueue?: Track[]) => {
-      if (!audio) return;
-
       const currentQueue = newQueue || get().queue;
       let finalQueue = currentQueue.length > 0 ? currentQueue : [track];
       let index = finalQueue.findIndex((t) => t.id === track.id);
@@ -155,19 +213,44 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         duration: track.duration || 0,
       });
 
-      audio.src = track.audioUrl;
-      audio.volume = get().isMuted ? 0 : get().volume;
-      audio
-        .play()
-        .then(() => {
+      updateMediaSession(track);
+      schedulePlayLog(track);
+
+      const ytId = extractYouTubeId(track);
+      const isYt = track.source === 'youtube' || !!ytId;
+
+      if (isYt && ytId) {
+        // Stop standard HTML5 audio
+        if (audio) {
+          audio.pause();
+          audio.src = '';
+        }
+
+        // Play via YouTube Bridge
+        const activeVol = get().isMuted ? 0 : get().volume;
+        youtubeBridge.playVideo(ytId, activeVol).then(() => {
           set({ isPlaying: true });
-          updateMediaSession(track);
-          schedulePlayLog(track);
-        })
-        .catch((err) => {
-          console.warn('Playback initiation error:', err);
+        }).catch((err) => {
+          console.warn('[YouTube] playback initiation failed:', err);
           set({ isPlaying: false });
         });
+      } else {
+        // Stop YouTube player if playing
+        youtubeBridge.stop();
+
+        if (!audio) return;
+        audio.src = track.audioUrl;
+        audio.volume = get().isMuted ? 0 : get().volume;
+        audio
+          .play()
+          .then(() => {
+            set({ isPlaying: true });
+          })
+          .catch((err) => {
+            console.warn('Playback initiation error:', err);
+            set({ isPlaying: false });
+          });
+      }
     },
 
     playQueue: (tracks: Track[], startIndex: number = 0) => {
@@ -178,7 +261,6 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
     },
 
     togglePlay: () => {
-      if (!audio) return;
       const { currentTrack, isPlaying, queue } = get();
 
       if (!currentTrack && queue.length > 0) {
@@ -186,6 +268,23 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         return;
       }
 
+      if (!currentTrack) return;
+
+      const ytId = extractYouTubeId(currentTrack);
+      const isYt = currentTrack.source === 'youtube' || !!ytId;
+
+      if (isYt) {
+        if (isPlaying) {
+          youtubeBridge.pause();
+          set({ isPlaying: false });
+        } else {
+          youtubeBridge.play();
+          set({ isPlaying: true });
+        }
+        return;
+      }
+
+      if (!audio) return;
       if (isPlaying) {
         audio.pause();
         set({ isPlaying: false });
@@ -217,17 +316,22 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       } else if (repeat === 'all') {
         playTrack(queue[0]);
       } else {
+        const { currentTrack } = get();
+        if (currentTrack?.source === 'youtube') youtubeBridge.stop();
+        if (audio) audio.pause();
         set({ isPlaying: false });
       }
     },
 
     prevTrack: () => {
-      if (!audio) return;
-      const { queue, queueIndex, playTrack, currentTime } = get();
+      const { queue, queueIndex, playTrack, currentTime, currentTrack } = get();
 
-      // If more than 3 seconds in, restart current track
       if (currentTime > 3) {
-        audio.currentTime = 0;
+        if (currentTrack?.source === 'youtube') {
+          youtubeBridge.seekTo(0);
+        } else if (audio) {
+          audio.currentTime = 0;
+        }
         set({ currentTime: 0 });
         return;
       }
@@ -237,35 +341,56 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
       if (prevIndex >= 0) {
         playTrack(queue[prevIndex]);
       } else {
-        audio.currentTime = 0;
+        if (currentTrack?.source === 'youtube') {
+          youtubeBridge.seekTo(0);
+        } else if (audio) {
+          audio.currentTime = 0;
+        }
         set({ currentTime: 0 });
       }
     },
 
     seekTo: (time: number) => {
-      if (!audio) return;
-      const validTime = Math.max(0, Math.min(time, get().duration || 1000));
-      audio.currentTime = validTime;
+      const { currentTrack, duration } = get();
+      const validTime = Math.max(0, Math.min(time, duration || 1000));
+
+      if (currentTrack?.source === 'youtube') {
+        youtubeBridge.seekTo(validTime);
+      } else if (audio) {
+        audio.currentTime = validTime;
+      }
       set({ currentTime: validTime });
     },
 
     setVolume: (vol: number) => {
-      if (!audio) return;
       const clamped = Math.max(0, Math.min(1, vol));
-      audio.volume = clamped;
+      const { currentTrack } = get();
+
+      if (currentTrack?.source === 'youtube') {
+        youtubeBridge.setVolume(clamped);
+      } else if (audio) {
+        audio.volume = clamped;
+      }
+
       set({ volume: clamped, isMuted: clamped === 0 });
     },
 
     toggleMute: () => {
-      if (!audio) return;
-      const { isMuted, volume } = get();
-      if (isMuted) {
-        audio.volume = volume || 0.8;
-        set({ isMuted: false });
-      } else {
-        audio.volume = 0;
-        set({ isMuted: true });
+      const { isMuted, volume, currentTrack } = get();
+      const nextMuted = !isMuted;
+
+      if (currentTrack?.source === 'youtube') {
+        if (nextMuted) {
+          youtubeBridge.mute();
+        } else {
+          youtubeBridge.unMute();
+          youtubeBridge.setVolume(volume || 0.8);
+        }
+      } else if (audio) {
+        audio.volume = nextMuted ? 0 : (volume || 0.8);
       }
+
+      set({ isMuted: nextMuted });
     },
 
     toggleShuffle: () => {
@@ -327,8 +452,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
         } else {
           await trackService.unlikeTrack(currentTrack.id);
         }
-      } catch (err) {
-        // Revert on error
+      } catch {
         set({
           currentTrack: { ...currentTrack, isLiked: !nextLiked },
           queue: get().queue.map((t) => (t.id === currentTrack.id ? { ...t, isLiked: !nextLiked } : t)),

@@ -52,8 +52,8 @@ export const TopNav: React.FC<TopNavProps> = ({ searchQuery, onSearchChange }) =
           </button>
         </div>
 
-        {/* Search Bar on Search Page or Clickable Input */}
-        {isSearchPage && onSearchChange ? (
+        {/* Search Bar on Search Page */}
+        {isSearchPage && onSearchChange && (
           <div className="relative flex-1 max-w-md ml-1">
             <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
@@ -64,14 +64,6 @@ export const TopNav: React.FC<TopNavProps> = ({ searchQuery, onSearchChange }) =
               autoFocus
               className="w-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 focus:bg-white dark:focus:bg-zinc-800 text-sm text-slate-900 dark:text-white placeholder-zinc-400 pl-10 pr-4 py-2 rounded-full border border-black/10 dark:border-white/10 focus:border-red-500 focus:outline-none transition-all shadow-sm"
             />
-          </div>
-        ) : (
-          <div
-            onClick={() => navigate('/search')}
-            className="hidden md:flex items-center gap-2.5 px-4 py-2 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 rounded-full text-xs text-zinc-500 dark:text-zinc-400 cursor-pointer transition-all border border-black/5 dark:border-white/5 flex-1 max-w-sm"
-          >
-            <Search className="w-4 h-4 text-zinc-400" />
-            <span>Search songs, artists & albums...</span>
           </div>
         )}
       </div>

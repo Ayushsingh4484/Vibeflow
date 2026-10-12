@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../config/prisma';
 import { JamendoService } from '../services/jamendoService';
+import { YouTubeService } from '../services/youtubeService';
 
 export const searchCatalog = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -20,7 +21,7 @@ export const searchCatalog = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const [tracks, artists, albums, playlists, onlineTracks] = await Promise.all([
+    const [tracks, artists, albums, playlists, onlineTracks, youtubeTracks] = await Promise.all([
       // Search local tracks
       prisma.track.findMany({
         where: {
@@ -89,6 +90,9 @@ export const searchCatalog = async (req: Request, res: Response): Promise<void> 
 
       // Search Jamendo online catalog
       JamendoService.searchTracks(q, 10).catch(() => []),
+
+      // Search YouTube catalog with YT_API_KEY
+      YouTubeService.searchTracks(q, 10).catch(() => []),
     ]);
 
     const formattedLocalTracks = tracks.map((t: any) => ({
@@ -98,19 +102,22 @@ export const searchCatalog = async (req: Request, res: Response): Promise<void> 
       likedBy: undefined,
     }));
 
-    // Check liked status for online Jamendo tracks
-    let formattedOnlineTracks = onlineTracks;
-    if (userId && onlineTracks.length > 0) {
-      const jamendoIds = onlineTracks.map((t) => t.id);
+    // Combine online catalog tracks (YouTube + Jamendo)
+    const combinedOnlineTracks: any[] = [...(youtubeTracks as any[]), ...(onlineTracks as any[])];
+
+    // Check liked status for online tracks
+    let formattedOnlineTracks = combinedOnlineTracks;
+    if (userId && combinedOnlineTracks.length > 0) {
+      const onlineIds = combinedOnlineTracks.map((t) => t.id);
       const liked = await prisma.likedTrack.findMany({
         where: {
           userId,
-          trackId: { in: jamendoIds },
+          trackId: { in: onlineIds },
         },
         select: { trackId: true },
       });
       const likedSet = new Set(liked.map((l) => l.trackId));
-      formattedOnlineTracks = onlineTracks.map((t) => ({ ...t, isLiked: likedSet.has(t.id) }));
+      formattedOnlineTracks = combinedOnlineTracks.map((t) => ({ ...t, isLiked: likedSet.has(t.id) }));
     }
 
     // Top Result ranking

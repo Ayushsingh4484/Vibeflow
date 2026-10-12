@@ -1,4 +1,4 @@
-export type MusicSource = 'local' | 'jamendo';
+export type MusicSource = 'local' | 'jamendo' | 'youtube';
 
 export interface User {
   id: string;
@@ -72,6 +72,7 @@ export interface Track {
   position?: number;
   externalUrl?: string;
   licenseUrl?: string;
+  youtubeId?: string;
 }
 
 export interface Playlist {

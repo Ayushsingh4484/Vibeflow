@@ -69,10 +69,13 @@ export const HomePage: React.FC = () => {
         setArtists(artistsRes.artists || []);
         setPlaylists(playlistsRes.playlists || []);
 
-        trackService
-          .getRecentlyPlayed()
-          .then((res) => setRecentTracks(res.tracks || []))
-          .catch(() => {});
+        const { isAuthenticated } = useAuthStore.getState();
+        if (isAuthenticated) {
+          trackService
+            .getRecentlyPlayed()
+            .then((res) => setRecentTracks(res.tracks || []))
+            .catch(() => {});
+        }
       } catch (err) {
         console.error('Failed to load homepage data:', err);
       } finally {

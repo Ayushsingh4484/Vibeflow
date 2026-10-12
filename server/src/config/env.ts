@@ -16,4 +16,5 @@ export const ENV = {
   STORAGE_KEY: process.env.STORAGE_KEY || '',
   STORAGE_SECRET: process.env.STORAGE_SECRET || '',
   JAMENDO_CLIENT_ID: process.env.JAMENDO_CLIENT_ID || '',
+  YT_API_KEY: process.env.YT_API_KEY || '',
 };
