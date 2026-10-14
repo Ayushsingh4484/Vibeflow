@@ -53,4 +53,76 @@ router.get('/file/:filename', (req: Request, res: Response): void => {
   streamAudioFile(req, res, localPath);
 });
 
+// Memory cache for proxied image buffers (max 200 images)
+const imageBufferCache = new Map<string, { buffer: Buffer; contentType: string; expiresAt: number }>();
+
+// Proxy upstream images with caching, CORS, and anti-hotlinking headers
+router.get('/image', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const rawUrl = String(req.query.url || '').trim();
+    if (!rawUrl || (!rawUrl.startsWith('http://') && !rawUrl.startsWith('https://'))) {
+      res.status(400).json({ error: 'Valid image URL is required' });
+      return;
+    }
+
+    const parsed = new URL(rawUrl);
+    const allowedHosts = [
+      'googleusercontent.com',
+      'ggpht.com',
+      'ytimg.com',
+      'youtube.com',
+      'jamendo.com',
+      'unsplash.com',
+      'dicebear.com',
+    ];
+    const isAllowed = allowedHosts.some((h) => parsed.hostname.endsWith(h));
+    if (!isAllowed) {
+      res.status(403).json({ error: 'Host not allowed for image proxy' });
+      return;
+    }
+
+    // Check buffer cache
+    const cached = imageBufferCache.get(rawUrl);
+    if (cached && Date.now() < cached.expiresAt) {
+      res.set('Content-Type', cached.contentType);
+      res.set('Cache-Control', 'public, max-age=604800, immutable');
+      res.set('Access-Control-Allow-Origin', '*');
+      res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+      res.send(cached.buffer);
+      return;
+    }
+
+    const upstreamRes = await fetch(rawUrl, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+      },
+    });
+
+    if (!upstreamRes.ok) {
+      res.status(upstreamRes.status).json({ error: 'Failed to fetch upstream image' });
+      return;
+    }
+
+    const contentType = upstreamRes.headers.get('content-type') || 'image/jpeg';
+    const buffer = Buffer.from(await upstreamRes.arrayBuffer());
+
+    // Cache image for 7 days
+    if (imageBufferCache.size > 200) {
+      const firstKey = imageBufferCache.keys().next().value;
+      if (firstKey) imageBufferCache.delete(firstKey);
+    }
+    imageBufferCache.set(rawUrl, { buffer, contentType, expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000 });
+
+    res.set('Content-Type', contentType);
+    res.set('Cache-Control', 'public, max-age=604800, immutable');
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.send(buffer);
+  } catch (error: any) {
+    console.error('Image proxy error:', error.message);
+    res.status(500).json({ error: 'Failed to proxy image' });
+  }
+});
+
 export default router;

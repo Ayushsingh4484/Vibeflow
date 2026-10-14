@@ -4,8 +4,9 @@ import { trackService } from '../services/trackService';
 import { albumService } from '../services/albumService';
 import { artistService, CatalogArtistItem } from '../services/artistService';
 import { playlistService } from '../services/playlistService';
-import { Track, Album, Playlist } from '../types';
+import { Track, Album, Playlist, PrebuiltPlaylist } from '../types';
 import { Card } from '../components/common/Card';
+import { PlaylistCard } from '../components/common/PlaylistCard';
 import { TrackTable } from '../components/common/TrackTable';
 import { CardSkeleton, TrackRowSkeleton } from '../components/common/Skeleton';
 import { usePlayerStore } from '../store/usePlayerStore';
@@ -23,6 +24,7 @@ import {
   Users,
 } from 'lucide-react';
 import { AddToPlaylistModal } from '../components/common/AddToPlaylistModal';
+import { ArtistAvatar } from '../components/common/ArtistAvatar';
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -34,10 +36,12 @@ export const HomePage: React.FC = () => {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [catalogArtists, setCatalogArtists] = useState<CatalogArtistItem[]>([]);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [prebuiltPlaylists, setPrebuiltPlaylists] = useState<PrebuiltPlaylist[]>([]);
   const [recentTracks, setRecentTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [suggestionsLoading, setSuggestionsLoading] = useState<boolean>(true);
   const [playingArtistId, setPlayingArtistId] = useState<string | null>(null);
+  const [playingPlaylistId, setPlayingPlaylistId] = useState<string | null>(null);
   const [selectedTrackForPlaylist, setSelectedTrackForPlaylist] = useState<Track | null>(null);
 
   useEffect(() => {
@@ -45,12 +49,13 @@ export const HomePage: React.FC = () => {
       setLoading(true);
       setSuggestionsLoading(true);
       try {
-        const [tracksRes, albumsRes, catalogRes, playlistsRes, suggestionsRes] = await Promise.all([
+        const [tracksRes, albumsRes, catalogRes, playlistsRes, suggestionsRes, prebuiltRes] = await Promise.all([
           trackService.getTracks({ limit: 10, sort: 'popular' }),
           albumService.getAlbums({ limit: 8 }),
           artistService.getCatalog({ limit: 22 } as any),
           playlistService.getPlaylists(8),
           trackService.getSuggestions().catch(() => ({ recommendations: [], sections: [] })),
+          playlistService.getPrebuiltPlaylists().catch(() => ({ playlists: [] })),
         ]);
 
         setPopularTracks(tracksRes.tracks || []);
@@ -58,6 +63,7 @@ export const HomePage: React.FC = () => {
         setCatalogArtists(catalogRes.artists || []);
         setPlaylists(playlistsRes.playlists || []);
         setRecommendations(suggestionsRes.recommendations || []);
+        setPrebuiltPlaylists(prebuiltRes.playlists || []);
         setSuggestionsLoading(false);
 
         const { isAuthenticated } = useAuthStore.getState();
@@ -92,6 +98,21 @@ export const HomePage: React.FC = () => {
       console.error('Failed to play artist tracks:', err);
     } finally {
       setPlayingArtistId(null);
+    }
+  };
+
+  const handlePlayPrebuilt = async (e: React.MouseEvent, pl: PrebuiltPlaylist | Playlist) => {
+    e.stopPropagation();
+    setPlayingPlaylistId(pl.id);
+    try {
+      const res = await playlistService.getPrebuiltPlaylistById(pl.id);
+      if (res.playlist?.tracks && res.playlist.tracks.length > 0) {
+        playQueue(res.playlist.tracks, 0);
+      }
+    } catch (err) {
+      console.error('Failed to play prebuilt playlist:', err);
+    } finally {
+      setPlayingPlaylistId(null);
     }
   };
 
@@ -199,6 +220,10 @@ export const HomePage: React.FC = () => {
                 src={cat.imageUrl}
                 alt={cat.name}
                 loading="lazy"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80';
+                }}
                 className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out brightness-90 group-hover:brightness-100"
               />
               <div className={`absolute inset-0 bg-gradient-to-t ${cat.gradient} opacity-90 group-hover:opacity-80 transition-opacity`} />
@@ -224,16 +249,73 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
+      {/* 2.5. Made for Your Mood (Pre-built Playlists) */}
+      <section className="flex flex-col gap-3.5">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-red-500 animate-pulse" />
+              Made for Your Mood
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
+              Your next favorite playlist is waiting.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/playlists')}
+            className="text-xs sm:text-sm font-extrabold text-red-500 hover:text-red-400 flex items-center gap-1 transition-colors px-3 py-1.5 rounded-full hover:bg-red-500/10"
+          >
+            <span>View All</span>
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Horizontally scrollable row of playlist cards */}
+        {loading ? (
+          <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-2 px-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="w-44 sm:w-52 shrink-0">
+                <CardSkeleton />
+              </div>
+            ))}
+          </div>
+        ) : prebuiltPlaylists.length === 0 ? (
+          <div className="p-6 rounded-3xl bg-white/50 dark:bg-[#16171e]/50 border border-black/5 dark:border-white/5 text-center text-xs text-zinc-400">
+            No curated playlists available.
+          </div>
+        ) : (
+          <div className="flex items-center gap-4 sm:gap-5 overflow-x-auto no-scrollbar pb-2 pt-1 -mx-2 px-2">
+            {prebuiltPlaylists.map((pl) => (
+              <div key={pl.id} className="w-44 sm:w-52 shrink-0">
+                <PlaylistCard
+                  playlist={pl}
+                  isPlaying={playingPlaylistId === pl.id}
+                  onPlay={handlePlayPrebuilt}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
       {/* 3. Browse by Artist (DIRECTLY BELOW BROWSE ALL CATEGORIES) */}
       <section className="flex flex-col gap-3.5">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <Users className="w-5 h-5 text-red-500" />
-            Browse by Artist
-          </h2>
-          <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
-            Find your favorite artists and explore their music.
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <Users className="w-5 h-5 text-red-500" />
+              Browse by Artist
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
+              Find your favorite artists and explore their music.
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/artists')}
+            className="text-xs font-bold text-red-500 hover:text-red-600 flex items-center gap-0.5 transition-colors"
+          >
+            See all <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Horizontally scrollable row of circular artist portrait cards */}
@@ -260,16 +342,11 @@ export const HomePage: React.FC = () => {
               >
                 {/* Circular Portrait with Floating Play Button on Hover */}
                 <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full mb-3 overflow-hidden bg-zinc-800 shadow-md border-2 border-transparent group-hover:border-red-500/50 transition-colors">
-                  <img
+                  <ArtistAvatar
                     src={artist.imageUrl}
-                    alt={artist.name}
+                    name={artist.name}
                     loading="lazy"
-                    className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(
-                        artist.name
-                      )}`;
-                    }}
+                    imgClassName="group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
 

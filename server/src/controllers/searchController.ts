@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import prisma from '../config/prisma';
 import { JamendoService } from '../services/jamendoService';
 import { YouTubeService } from '../services/youtubeService';
+import { ARTIST_CATALOG } from '../constants/artistCatalog';
+import { ArtistMetadataService } from '../services/artistMetadataService';
 
 export const searchCatalog = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -21,7 +23,7 @@ export const searchCatalog = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const [tracks, artists, albums, playlists, onlineTracks, youtubeTracks] = await Promise.all([
+    const [tracks, artists, albums, playlists, onlineTracks, youtubeTracks, catalogOrDynamicArtists] = await Promise.all([
       // Search local tracks
       prisma.track.findMany({
         where: {
@@ -93,6 +95,42 @@ export const searchCatalog = async (req: Request, res: Response): Promise<void> 
 
       // Search YouTube catalog with YT_API_KEY
       YouTubeService.searchTracks(q, 10).catch(() => []),
+
+      // Search catalog & dynamic artists with real YouTube Music photos
+      (async () => {
+        const enriched = await ArtistMetadataService.getEnrichedCatalog();
+        const catalogMatches = enriched.filter((a) =>
+          a.name.toLowerCase().includes(q.toLowerCase())
+        );
+        if (catalogMatches.length > 0) {
+          return catalogMatches.map((c) => ({
+            id: c.id,
+            name: c.name,
+            imageUrl: c.imageUrl,
+            bio: c.bio,
+            _count: { tracks: 15, albums: 3 },
+          }));
+        }
+        if (q.length >= 3) {
+          try {
+            const meta = await ArtistMetadataService.getArtistMetadata(q);
+            if (meta && meta.imageUrl) {
+              return [
+                {
+                  id: meta.id,
+                  name: meta.name,
+                  imageUrl: meta.imageUrl,
+                  bio: meta.bio,
+                  _count: { tracks: 15, albums: 3 },
+                },
+              ];
+            }
+          } catch {
+            return [];
+          }
+        }
+        return [];
+      })().catch(() => []),
     ]);
 
     const formattedLocalTracks = tracks.map((t: any) => ({
@@ -120,17 +158,29 @@ export const searchCatalog = async (req: Request, res: Response): Promise<void> 
       formattedOnlineTracks = combinedOnlineTracks.map((t) => ({ ...t, isLiked: likedSet.has(t.id) }));
     }
 
+    // Merge and deduplicate artists
+    const allArtists = [...artists];
+    for (const ca of (catalogOrDynamicArtists as any[])) {
+      if (!allArtists.some((a) => a.name.toLowerCase() === ca.name.toLowerCase())) {
+        allArtists.push(ca);
+      }
+    }
+
     // Top Result ranking
     let topResult: any = null;
-    const exactArtist = artists.find((a) => a.name.toLowerCase() === q.toLowerCase());
-    if (exactArtist) {
-      topResult = { type: 'artist', data: exactArtist };
+    const matchedArtist = allArtists.find(
+      (a) =>
+        a.name.toLowerCase() === q.toLowerCase() ||
+        a.name.toLowerCase().startsWith(q.toLowerCase())
+    );
+    if (matchedArtist) {
+      topResult = { type: 'artist', data: matchedArtist };
     } else if (formattedLocalTracks.length > 0) {
       topResult = { type: 'track', data: formattedLocalTracks[0] };
     } else if (formattedOnlineTracks.length > 0) {
       topResult = { type: 'track', data: formattedOnlineTracks[0] };
-    } else if (artists.length > 0) {
-      topResult = { type: 'artist', data: artists[0] };
+    } else if (allArtists.length > 0) {
+      topResult = { type: 'artist', data: allArtists[0] };
     } else if (albums.length > 0) {
       topResult = { type: 'album', data: albums[0] };
     } else if (playlists.length > 0) {
@@ -153,7 +203,7 @@ export const searchCatalog = async (req: Request, res: Response): Promise<void> 
       query: q,
       topResult,
       tracks: formattedLocalTracks,
-      artists,
+      artists: allArtists,
       albums,
       playlists,
       onlineTracks: formattedOnlineTracks,

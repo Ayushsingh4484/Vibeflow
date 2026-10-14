@@ -9,11 +9,19 @@ import {
   addTrackToPlaylist,
   removeTrackFromPlaylist,
   reorderTracks,
+  getPrebuiltPlaylists,
+  getPrebuiltPlaylistById,
+  savePrebuiltPlaylistToLibrary,
 } from '../controllers/playlistController';
 import { authenticate, optionalAuthenticate } from '../middleware/auth';
 import { uploadMedia } from '../middleware/upload';
 
 const router = Router();
+
+// Pre-built Curated Playlists (must precede /:id)
+router.get('/prebuilt', getPrebuiltPlaylists);
+router.get('/prebuilt/:id', optionalAuthenticate, getPrebuiltPlaylistById);
+router.post('/prebuilt/:id/save', authenticate, savePrebuiltPlaylistToLibrary);
 
 router.get('/', getPlaylists);
 router.get('/user/me', authenticate, getUserPlaylists);

@@ -79,6 +79,11 @@ export const Sidebar: React.FC = () => {
               <Sparkles className="w-5 h-5 text-red-500" />
               <span>Suggestions</span>
             </NavLink>
+
+            <NavLink to="/playlists" className={navLinkClass}>
+              <Music className="w-5 h-5 text-red-500" />
+              <span>Curated Playlists</span>
+            </NavLink>
           </nav>
         </div>
 

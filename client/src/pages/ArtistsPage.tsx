@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { artistService, CatalogArtistItem } from '../services/artistService';
+import { ArtistAvatar } from '../components/common/ArtistAvatar';
 import { usePlayerStore } from '../store/usePlayerStore';
 import {
   Search,
@@ -172,16 +173,11 @@ export const ArtistsPage: React.FC = () => {
             >
               {/* Circular Portrait with Floating Play Button */}
               <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full mb-3 overflow-hidden bg-zinc-800 shadow-lg border-2 border-transparent group-hover:border-red-500/50 transition-colors">
-                <img
+                <ArtistAvatar
                   src={artist.imageUrl}
-                  alt={artist.name}
+                  name={artist.name}
                   loading="lazy"
-                  className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(
-                      artist.name
-                    )}`;
-                  }}
+                  imgClassName="group-hover:scale-110 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
 

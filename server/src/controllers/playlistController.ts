@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../config/prisma';
 import { StorageService } from '../services/storageService';
 import { JamendoService } from '../services/jamendoService';
+import { PrebuiltPlaylistService } from '../services/prebuiltPlaylistService';
 
 async function ensureTrackExists(trackId: string, trackData?: any) {
   let coverUrl = trackData?.artworkUrl || trackData?.coverUrl || null;
@@ -145,6 +146,28 @@ export const getPlaylistById = async (req: Request, res: Response): Promise<void
     });
 
     if (!playlist) {
+      const prebuilt = await PrebuiltPlaylistService.getPlaylistById(id);
+      if (prebuilt) {
+        let formattedTracks = prebuilt.tracks;
+        if (userId && formattedTracks.length > 0) {
+          const trackIds = formattedTracks.map((t) => t.id);
+          const liked = await prisma.likedTrack.findMany({
+            where: { userId, trackId: { in: trackIds } },
+            select: { trackId: true },
+          });
+          const likedSet = new Set(liked.map((l) => l.trackId));
+          formattedTracks = formattedTracks.map((t) => ({ ...t, isLiked: likedSet.has(t.id) })) as any;
+        }
+
+        res.json({
+          playlist: {
+            ...prebuilt,
+            tracks: formattedTracks,
+          },
+        });
+        return;
+      }
+
       res.status(404).json({ error: 'Playlist not found.' });
       return;
     }
@@ -421,3 +444,86 @@ export const reorderTracks = async (req: Request, res: Response): Promise<void> 
     res.status(500).json({ error: 'Failed to reorder playlist.' });
   }
 };
+
+export const getPrebuiltPlaylists = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { category, search } = req.query;
+    let playlists = PrebuiltPlaylistService.getCatalog();
+
+    if (category && typeof category === 'string' && category !== 'All') {
+      playlists = playlists.filter(
+        (p) =>
+          p.category.toLowerCase() === category.toLowerCase() ||
+          p.tag.toLowerCase() === category.toLowerCase()
+      );
+    }
+
+    if (search && typeof search === 'string') {
+      const q = search.toLowerCase().trim();
+      playlists = playlists.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.subtitle.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q) ||
+          p.tag.toLowerCase().includes(q)
+      );
+    }
+
+    res.json({ playlists });
+  } catch (error: any) {
+    console.error('getPrebuiltPlaylists error:', error);
+    res.status(500).json({ error: 'Failed to fetch prebuilt playlists.' });
+  }
+};
+
+export const getPrebuiltPlaylistById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const id = String(req.params.id);
+    const userId = req.user?.id;
+
+    const playlist = await PrebuiltPlaylistService.getPlaylistById(id);
+    if (!playlist) {
+      res.status(404).json({ error: 'Prebuilt playlist not found.' });
+      return;
+    }
+
+    let formattedTracks = playlist.tracks;
+    if (userId && formattedTracks.length > 0) {
+      const trackIds = formattedTracks.map((t) => t.id);
+      const liked = await prisma.likedTrack.findMany({
+        where: { userId, trackId: { in: trackIds } },
+        select: { trackId: true },
+      });
+      const likedSet = new Set(liked.map((l) => l.trackId));
+      formattedTracks = formattedTracks.map((t) => ({ ...t, isLiked: likedSet.has(t.id) })) as any;
+    }
+
+    res.json({
+      playlist: {
+        ...playlist,
+        tracks: formattedTracks,
+      },
+    });
+  } catch (error: any) {
+    console.error('getPrebuiltPlaylistById error:', error);
+    res.status(500).json({ error: 'Failed to fetch prebuilt playlist details.' });
+  }
+};
+
+export const savePrebuiltPlaylistToLibrary = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: 'Authentication required to save playlist.' });
+      return;
+    }
+
+    const id = String(req.params.id);
+    const saved = await PrebuiltPlaylistService.saveToUserLibrary(id, userId);
+    res.status(201).json({ success: true, message: 'Playlist saved to library.', playlist: saved });
+  } catch (error: any) {
+    console.error('savePrebuiltPlaylistToLibrary error:', error);
+    res.status(500).json({ error: error.message || 'Failed to save prebuilt playlist.' });
+  }
+};
+

@@ -3,6 +3,7 @@ import prisma from '../config/prisma';
 import { StorageService } from '../services/storageService';
 import { ARTIST_CATALOG } from '../constants/artistCatalog';
 import { YouTubeService } from '../services/youtubeService';
+import { ArtistMetadataService } from '../services/artistMetadataService';
 
 export const getArtists = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -160,7 +161,7 @@ export const deleteArtist = async (req: Request, res: Response): Promise<void> =
 export const getArtistCatalog = async (req: Request, res: Response): Promise<void> => {
   try {
     const { category, region, search } = req.query;
-    let artists = [...ARTIST_CATALOG];
+    let artists = await ArtistMetadataService.getEnrichedCatalog();
 
     if (category && typeof category === 'string' && category !== 'All') {
       artists = artists.filter((a) => a.category.toLowerCase() === category.toLowerCase());
@@ -175,6 +176,29 @@ export const getArtistCatalog = async (req: Request, res: Response): Promise<voi
       artists = artists.filter(
         (a) => a.name.toLowerCase().includes(q) || a.category.toLowerCase().includes(q)
       );
+
+      // If user searched for an artist outside of catalog, fetch metadata dynamically!
+      if (artists.length === 0 && q.length >= 2) {
+        try {
+          const dynamicMeta = await ArtistMetadataService.getArtistMetadata(q);
+          if (dynamicMeta && dynamicMeta.imageUrl) {
+            artists = [
+              {
+                id: dynamicMeta.id,
+                name: dynamicMeta.name,
+                category: (dynamicMeta.category as any) || 'Pop',
+                region: (dynamicMeta.region as any) || 'International',
+                bio: dynamicMeta.bio || `Explore music by ${dynamicMeta.name}`,
+                imageUrl: dynamicMeta.imageUrl,
+                monthlyListeners: dynamicMeta.monthlyListeners || '10M+',
+                browseId: dynamicMeta.browseId,
+              },
+            ];
+          }
+        } catch {
+          // ignore fallback
+        }
+      }
     }
 
     res.json({ artists });
@@ -196,40 +220,35 @@ export const getDynamicArtistDetails = async (req: Request, res: Response): Prom
       return;
     }
 
-    // Check catalog first for curated metadata
-    const catalogItem = ARTIST_CATALOG.find(
-      (a) => a.name.toLowerCase() === query.toLowerCase() || a.id === query.toLowerCase()
-    );
+    // Fetch normalized artist metadata with real YouTube Music photo
+    const metadata = await ArtistMetadataService.getArtistMetadata(query);
 
-    const displayName = catalogItem ? catalogItem.name : query;
-    const displayImage = catalogItem ? catalogItem.imageUrl : undefined;
-    const displayBio = catalogItem ? catalogItem.bio : `Explore music, popular hits, and curated playlists by ${displayName}.`;
-
-    // Fetch songs and playlists in parallel via YouTubeService
+    // Fetch songs and official playlists in parallel via YouTubeService
     const [ytTracks, ytPlaylists] = await Promise.all([
-      YouTubeService.searchTracks(`${displayName} official song`, 15).catch(() => []),
-      YouTubeService.searchArtistPlaylists(displayName, 8).catch(() => []),
+      YouTubeService.searchTracks(`${metadata.name} official song`, 15).catch(() => []),
+      YouTubeService.searchArtistPlaylists(metadata.name, 8).catch(() => []),
     ]);
 
-    // Format songs into artist format
+    // Format songs into artist format with real artist portrait
     const formattedTracks = ytTracks.map((t) => ({
       ...t,
       artist: {
-        id: catalogItem?.id || `yt-${encodeURIComponent(displayName)}`,
-        name: displayName,
-        imageUrl: displayImage || t.artworkUrl,
+        id: metadata.id,
+        name: metadata.name,
+        imageUrl: metadata.imageUrl,
       },
     }));
 
     res.json({
       artist: {
-        id: catalogItem?.id || `dynamic-${encodeURIComponent(displayName)}`,
-        name: displayName,
-        bio: displayBio,
-        imageUrl: displayImage || formattedTracks[0]?.artworkUrl || `https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80`,
-        category: catalogItem?.category || 'Music',
-        region: catalogItem?.region || 'International',
-        monthlyListeners: catalogItem?.monthlyListeners || '10M+',
+        id: metadata.id,
+        name: metadata.name,
+        bio: metadata.bio,
+        imageUrl: metadata.imageUrl,
+        browseId: metadata.browseId,
+        category: metadata.category || 'Music',
+        region: metadata.region || 'International',
+        monthlyListeners: metadata.monthlyListeners || '10M+',
         tracks: formattedTracks,
         playlists: ytPlaylists,
         albums: [],

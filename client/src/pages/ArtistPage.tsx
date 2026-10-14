@@ -7,6 +7,7 @@ import { Card } from '../components/common/Card';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { Play, Shuffle, CheckCircle2, User, ListMusic, Sparkles, Disc } from 'lucide-react';
 import { AddToPlaylistModal } from '../components/common/AddToPlaylistModal';
+import { ArtistAvatar } from '../components/common/ArtistAvatar';
 
 export const ArtistPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -94,28 +95,26 @@ export const ArtistPage: React.FC = () => {
           <img
             src={artist.imageUrl}
             alt={artist.name}
+            referrerPolicy="no-referrer"
             className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-luminosity blur-md scale-105"
+            onError={(e) => {
+              const img = e.target as HTMLImageElement;
+              if (artist.imageUrl && !img.src.includes('/api/stream/image')) {
+                img.src = `/api/stream/image?url=${encodeURIComponent(artist.imageUrl)}`;
+              }
+            }}
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#0e0e12] via-[#0e0e12]/60 to-transparent" />
 
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-end gap-6">
-          {artist.imageUrl ? (
-            <img
+          <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 rounded-full overflow-hidden shadow-2xl border-4 border-white/10 shrink-0 ring-4 ring-black/40 bg-zinc-800">
+            <ArtistAvatar
               src={artist.imageUrl}
-              alt={artist.name}
-              className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 rounded-full object-cover shadow-2xl border-4 border-white/10 shrink-0 ring-4 ring-black/40"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(
-                  artist.name
-                )}`;
-              }}
+              name={artist.name}
+              loading="eager"
             />
-          ) : (
-            <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 rounded-full bg-zinc-800 flex items-center justify-center shrink-0 border-4 border-white/10">
-              <User className="w-16 h-16 text-zinc-500" />
-            </div>
-          )}
+          </div>
 
           <div className="flex flex-col gap-2 min-w-0">
             <div className="flex items-center gap-2">

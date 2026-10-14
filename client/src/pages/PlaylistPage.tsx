@@ -7,7 +7,7 @@ import { usePlayerStore } from '../store/usePlayerStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { useToastStore } from '../store/useToastStore';
 import { formatDuration } from '../utils/format';
-import { Play, Shuffle, Music, Trash2, Edit3 } from 'lucide-react';
+import { Play, Shuffle, Music, Trash2, Edit3, BookmarkPlus, Check } from 'lucide-react';
 import { Modal } from '../components/common/Modal';
 import { AddToPlaylistModal } from '../components/common/AddToPlaylistModal';
 
@@ -63,7 +63,28 @@ export const PlaylistPage: React.FC = () => {
     );
   }
 
-  const isOwner = user?.id === playlist.userId || user?.role === 'ADMIN';
+  const isPrebuilt = (playlist as any).isPrebuilt || playlist.id.startsWith('prebuilt-') || playlist.id.startsWith('yt-playlist-');
+  const isOwner = !isPrebuilt && (user?.id === playlist.userId || user?.role === 'ADMIN');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+
+  const handleSaveToLibrary = async () => {
+    if (!user) {
+      addToast('Please log in to save this playlist to your library', 'info');
+      navigate('/login');
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await playlistService.savePrebuiltPlaylist(playlist.id);
+      setIsSaved(true);
+      addToast(`Saved "${playlist.name}" to your library!`, 'success');
+    } catch (err: any) {
+      addToast(err.message || 'Failed to save playlist', 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleRemoveTrack = async (trackId: string) => {
     try {
@@ -115,19 +136,27 @@ export const PlaylistPage: React.FC = () => {
           <img
             src={playlist.coverUrl}
             alt={playlist.name}
+            referrerPolicy="no-referrer"
             className="w-44 h-44 md:w-52 md:h-52 rounded-2xl object-cover shadow-2xl shrink-0 bg-zinc-800"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(playlist.name)}`;
+              const img = e.target as HTMLImageElement;
+              if (playlist.coverUrl && !img.src.includes('/api/stream/image')) {
+                img.src = `/api/stream/image?url=${encodeURIComponent(playlist.coverUrl)}`;
+              } else {
+                img.src = `https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80`;
+              }
             }}
           />
         ) : (
-          <div className="w-44 h-44 md:w-52 md:h-52 rounded-2xl bg-zinc-800 shadow-2xl flex items-center justify-center shrink-0">
-            <Music className="w-20 h-20 text-zinc-500" />
+          <div className="w-44 h-44 md:w-52 md:h-52 rounded-2xl bg-gradient-to-br from-red-600 to-zinc-900 shadow-2xl flex items-center justify-center shrink-0">
+            <Music className="w-20 h-20 text-white/70" />
           </div>
         )}
 
         <div className="flex flex-col gap-2 min-w-0">
-          <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Playlist</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-red-500">
+            {isPrebuilt ? 'Curated Playlist' : 'Playlist'}
+          </span>
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-white tracking-tight truncate">
             {playlist.name}
           </h1>
@@ -137,7 +166,7 @@ export const PlaylistPage: React.FC = () => {
             </p>
           )}
           <div className="flex items-center gap-2 text-xs md:text-sm text-zinc-300 font-medium mt-2">
-            <span className="font-bold text-white">{playlist.user?.name || 'VibeFlow User'}</span>
+            <span className="font-bold text-white">{playlist.user?.name || 'VibeFlow Curators'}</span>
             <span>•</span>
             <span>{tracks.length} {tracks.length === 1 ? 'song' : 'songs'}</span>
             {playlist.totalDuration ? (
@@ -157,7 +186,7 @@ export const PlaylistPage: React.FC = () => {
             <>
               <button
                 onClick={() => playQueue(tracks, 0)}
-                className="w-14 h-14 rounded-full bg-brand-500 hover:bg-brand-400 text-black flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all"
+                className="w-14 h-14 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-2xl shadow-red-600/40 hover:scale-105 active:scale-95 transition-all"
                 title="Play Playlist"
               >
                 <Play className="w-6 h-6 fill-current ml-0.5" />
@@ -173,6 +202,33 @@ export const PlaylistPage: React.FC = () => {
                 <Shuffle className="w-6 h-6" />
               </button>
             </>
+          )}
+
+          {isPrebuilt && (
+            <button
+              onClick={handleSaveToLibrary}
+              disabled={isSaving || isSaved}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-extrabold transition-all ${
+                isSaved
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  : 'bg-white/10 hover:bg-white/20 text-white border border-white/10 hover:scale-105 active:scale-95'
+              }`}
+              title="Save to your library"
+            >
+              {isSaving ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : isSaved ? (
+                <>
+                  <Check className="w-4 h-4 text-emerald-400" />
+                  <span>Saved to Library</span>
+                </>
+              ) : (
+                <>
+                  <BookmarkPlus className="w-4 h-4 text-red-400" />
+                  <span>Save to Library</span>
+                </>
+              )}
+            </button>
           )}
 
           {isOwner && (

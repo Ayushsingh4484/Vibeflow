@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play } from 'lucide-react';
+import { ArtistAvatar } from './ArtistAvatar';
 
 interface CardProps {
   id: string;
@@ -40,24 +41,30 @@ export const Card: React.FC<CardProps> = ({
     >
       {/* Artwork Container */}
       <div className="relative aspect-square w-full overflow-hidden shadow-md bg-zinc-100 dark:bg-zinc-800 rounded-xl md:rounded-2xl">
-        {imageUrl ? (
+        {isArtist ? (
+          <ArtistAvatar
+            src={imageUrl}
+            name={title}
+            imgClassName="group-hover:scale-105 transition-transform duration-500"
+          />
+        ) : imageUrl ? (
           <img
             src={imageUrl}
             alt={title}
-            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
-              isArtist ? 'rounded-full' : 'rounded-xl md:rounded-2xl'
-            }`}
+            referrerPolicy="no-referrer"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 rounded-xl md:rounded-2xl"
             loading="lazy"
             onError={(e) => {
-              (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(title)}`;
+              const img = e.target as HTMLImageElement;
+              if (imageUrl.startsWith('http') && !img.src.includes('/api/stream/image')) {
+                img.src = `/api/stream/image?url=${encodeURIComponent(imageUrl)}`;
+              } else {
+                img.src = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(title)}`;
+              }
             }}
           />
         ) : (
-          <div
-            className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-red-500 to-rose-700 text-white ${
-              isArtist ? 'rounded-full' : 'rounded-xl md:rounded-2xl'
-            }`}
-          >
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-500 to-rose-700 text-white rounded-xl md:rounded-2xl">
             <span className="text-3xl font-extrabold">{title.charAt(0)}</span>
           </div>
         )}

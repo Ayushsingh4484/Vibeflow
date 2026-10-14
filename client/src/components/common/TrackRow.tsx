@@ -109,6 +109,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
           <img
             src={(track.artworkUrl || track.coverUrl)!}
             alt={track.title}
+            referrerPolicy="no-referrer"
             className="w-10 h-10 rounded-lg object-cover shadow-sm bg-zinc-200 dark:bg-zinc-800 shrink-0"
             onError={(e) => {
               (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(track.title)}`;

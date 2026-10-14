@@ -7,6 +7,7 @@ import { LibraryPage } from './pages/LibraryPage';
 import { LikedSongsPage } from './pages/LikedSongsPage';
 import { RecentlyPlayedPage } from './pages/RecentlyPlayedPage';
 import { PlaylistPage } from './pages/PlaylistPage';
+import { PlaylistsPage } from './pages/PlaylistsPage';
 import { AlbumPage } from './pages/AlbumPage';
 import { ArtistPage } from './pages/ArtistPage';
 import { ArtistsPage } from './pages/ArtistsPage';
@@ -66,6 +67,7 @@ export const AppContent: React.FC = () => {
         <Route path="/suggestions" element={<SuggestionsPage />} />
         <Route path="/liked" element={<LikedSongsPage />} />
         <Route path="/recently-played" element={<RecentlyPlayedPage />} />
+        <Route path="/playlists" element={<PlaylistsPage />} />
         <Route path="/playlist/:id" element={<PlaylistPage />} />
         <Route path="/album/:id" element={<AlbumPage />} />
         <Route path="/artists" element={<ArtistsPage />} />

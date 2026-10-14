@@ -78,6 +78,7 @@ export interface Track {
 export interface Playlist {
   id: string;
   name: string;
+  subtitle?: string;
   description?: string | null;
   coverUrl?: string | null;
   userId: string;
@@ -91,9 +92,26 @@ export interface Playlist {
   tracks?: Track[];
   trackCount?: number;
   totalDuration?: number;
+  category?: string;
+  tag?: string;
+  gradient?: string;
+  isPrebuilt?: boolean;
   _count?: {
     tracks: number;
   };
+}
+
+export interface PrebuiltPlaylist {
+  id: string;
+  name: string;
+  subtitle?: string;
+  description?: string | null;
+  category: string;
+  tag: string;
+  coverUrl: string;
+  gradient: string;
+  trackCount: number;
+  isPrebuilt?: boolean;
 }
 
 export interface SearchResults {
