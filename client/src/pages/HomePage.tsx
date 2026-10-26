@@ -137,10 +137,11 @@ export const HomePage: React.FC = () => {
         {/* Large Rounded Pill Search Bar */}
         <div
           onClick={() => navigate('/search')}
-          className="group relative flex items-center gap-3 px-4 py-3 bg-white dark:bg-[#1c1d24] hover:bg-zinc-50 dark:hover:bg-[#252632] rounded-full border border-black/5 dark:border-white/10 shadow-sm hover:shadow-md cursor-pointer transition-all duration-300"
+          className="liquid-btn group relative flex items-center gap-3 px-5 py-3.5 bg-white/70 dark:bg-[#141622]/65 hover:bg-white/90 dark:hover:bg-[#1c1e2e]/80 rounded-full border border-black/10 dark:border-white/10 shadow-sm hover:shadow-lg cursor-pointer transition-all duration-200 backdrop-blur-xl overflow-hidden"
         >
+          <div className="liquid-specular-top" />
           <Search className="w-5 h-5 text-zinc-400 group-hover:text-red-500 transition-colors" />
-          <span className="text-sm font-medium text-zinc-400 dark:text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-200 transition-colors">
+          <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-200 transition-colors">
             Search songs, artists & albums
           </span>
         </div>
@@ -160,7 +161,7 @@ export const HomePage: React.FC = () => {
           </div>
           <button
             onClick={() => navigate('/suggestions')}
-            className="text-xs sm:text-sm font-extrabold text-red-500 hover:text-red-400 flex items-center gap-1 transition-colors px-3 py-1.5 rounded-full hover:bg-red-500/10"
+            className="liquid-btn text-xs sm:text-sm font-extrabold text-red-500 hover:text-red-400 flex items-center gap-1 transition-colors px-3 py-1.5 rounded-full hover:bg-red-500/10"
           >
             <span>Show all</span>
             <ChevronRight className="w-4 h-4" />
@@ -177,7 +178,7 @@ export const HomePage: React.FC = () => {
             ))}
           </div>
         ) : recommendations.length === 0 ? (
-          <div className="p-6 rounded-3xl bg-white/50 dark:bg-[#16171e]/50 border border-black/5 dark:border-white/5 text-center text-xs text-zinc-400">
+          <div className="p-6 rounded-3xl bg-white/40 dark:bg-[#16171e]/40 backdrop-blur-xl border border-black/5 dark:border-white/10 text-center text-xs text-zinc-400">
             Start playing songs to receive tailored recommendations.
           </div>
         ) : (
@@ -214,8 +215,9 @@ export const HomePage: React.FC = () => {
             <div
               key={cat.name}
               onClick={() => handleSelectCategory(cat.query)}
-              className="group relative w-36 sm:w-44 h-36 sm:h-44 rounded-3xl overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-black/5 dark:border-white/10 shrink-0 flex flex-col justify-between p-3.5 sm:p-4 select-none bg-zinc-900"
+              className="liquid-btn group relative w-36 sm:w-44 h-36 sm:h-44 rounded-3xl overflow-hidden shadow-md hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-white/20 shrink-0 flex flex-col justify-between p-3.5 sm:p-4 select-none bg-zinc-900"
             >
+              <div className="liquid-specular-top opacity-60 group-hover:opacity-100 transition-opacity" />
               <img
                 src={cat.imageUrl}
                 alt={cat.name}
@@ -240,7 +242,7 @@ export const HomePage: React.FC = () => {
               </div>
 
               <div className="relative z-10 self-end">
-                <div className="w-8 h-8 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-lg shadow-red-600/40 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 hover:scale-105 active:scale-95">
+                <div className="liquid-btn w-8 h-8 rounded-full bg-gradient-to-tr from-red-600 to-rose-500 text-white flex items-center justify-center shadow-lg shadow-red-600/40 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-200 border-t border-white/40">
                   <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
                 </div>
               </div>
@@ -257,13 +259,13 @@ export const HomePage: React.FC = () => {
               <Sparkles className="w-5 h-5 text-red-500 animate-pulse" />
               Made for Your Mood
             </h2>
-            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
+            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5 font-medium">
               Your next favorite playlist is waiting.
             </p>
           </div>
           <button
             onClick={() => navigate('/playlists')}
-            className="text-xs sm:text-sm font-extrabold text-red-500 hover:text-red-400 flex items-center gap-1 transition-colors px-3 py-1.5 rounded-full hover:bg-red-500/10"
+            className="liquid-btn text-xs sm:text-sm font-extrabold text-red-500 hover:text-red-400 flex items-center gap-1 transition-colors px-3 py-1.5 rounded-full hover:bg-red-500/10"
           >
             <span>View All</span>
             <ChevronRight className="w-4 h-4" />
@@ -280,7 +282,7 @@ export const HomePage: React.FC = () => {
             ))}
           </div>
         ) : prebuiltPlaylists.length === 0 ? (
-          <div className="p-6 rounded-3xl bg-white/50 dark:bg-[#16171e]/50 border border-black/5 dark:border-white/5 text-center text-xs text-zinc-400">
+          <div className="p-6 rounded-3xl bg-white/40 dark:bg-[#16171e]/40 backdrop-blur-xl border border-black/5 dark:border-white/10 text-center text-xs text-zinc-400">
             No curated playlists available.
           </div>
         ) : (
@@ -306,13 +308,13 @@ export const HomePage: React.FC = () => {
               <Users className="w-5 h-5 text-red-500" />
               Browse by Artist
             </h2>
-            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
+            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-0.5 font-medium">
               Find your favorite artists and explore their music.
             </p>
           </div>
           <button
             onClick={() => navigate('/artists')}
-            className="text-xs font-bold text-red-500 hover:text-red-600 flex items-center gap-0.5 transition-colors"
+            className="liquid-btn text-xs font-bold text-red-500 hover:text-red-600 flex items-center gap-0.5 transition-colors"
           >
             See all <ChevronRight className="w-4 h-4" />
           </button>
@@ -329,7 +331,7 @@ export const HomePage: React.FC = () => {
             ))}
           </div>
         ) : catalogArtists.length === 0 ? (
-          <div className="p-6 rounded-3xl bg-white/50 dark:bg-[#16171e]/50 border border-black/5 dark:border-white/5 text-center text-xs text-zinc-400">
+          <div className="p-6 rounded-3xl bg-white/40 dark:bg-[#16171e]/40 backdrop-blur-xl border border-black/5 dark:border-white/10 text-center text-xs text-zinc-400">
             No artists available.
           </div>
         ) : (
@@ -338,8 +340,9 @@ export const HomePage: React.FC = () => {
               <div
                 key={artist.id}
                 onClick={() => navigate(`/artist/${encodeURIComponent(artist.name)}`)}
-                className="group relative w-36 sm:w-44 p-3.5 rounded-3xl bg-white dark:bg-[#16171e] hover:bg-zinc-50 dark:hover:bg-[#1f202b] border border-black/5 dark:border-white/5 hover:border-red-500/30 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col items-center text-center shrink-0 select-none"
+                className="liquid-glass-card group relative w-36 sm:w-44 p-3.5 rounded-3xl cursor-pointer flex flex-col items-center text-center shrink-0 select-none overflow-hidden"
               >
+                <div className="liquid-specular-top opacity-60 group-hover:opacity-100 transition-opacity" />
                 {/* Circular Portrait with Floating Play Button on Hover */}
                 <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full mb-3 overflow-hidden bg-zinc-800 shadow-md border-2 border-transparent group-hover:border-red-500/50 transition-colors">
                   <ArtistAvatar

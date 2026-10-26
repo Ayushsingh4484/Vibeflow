@@ -16,6 +16,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { playlistService } from '../../services/playlistService';
 import { Playlist } from '../../types';
 import { CreatePlaylistModal } from '../common/CreatePlaylistModal';
+import { LiquidNavContainer } from '../common/LiquidNavIndicator';
 
 export const Sidebar: React.FC = () => {
   const { user, isAuthenticated } = useAuthStore();
@@ -41,20 +42,23 @@ export const Sidebar: React.FC = () => {
   };
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${
+    `liquid-btn relative z-10 flex items-center gap-3.5 px-4 py-2.5 rounded-2xl text-sm font-bold transition-colors duration-200 select-none ${
       isActive
-        ? 'bg-red-500 text-white shadow-lg shadow-red-500/25 scale-[1.02]'
-        : 'text-zinc-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
+        ? 'text-white'
+        : 'text-zinc-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/5'
     }`;
 
   return (
     <>
-      <aside className="w-64 bg-zinc-100 dark:bg-[#09090b] h-full flex flex-col p-3 gap-3 select-none shrink-0 border-r border-black/5 dark:border-white/5 transition-colors">
-        {/* Top Section */}
-        <div className="bg-white dark:bg-[#14151a] rounded-3xl p-4 flex flex-col gap-4 border border-black/5 dark:border-white/5 shadow-sm">
+      <aside className="w-64 h-full flex flex-col p-3 gap-3 select-none shrink-0 transition-colors bg-transparent">
+        {/* Top Section: Frosted Liquid Glass */}
+        <div className="relative overflow-hidden bg-white/70 dark:bg-[#11131c]/65 backdrop-blur-2xl rounded-3xl p-4 flex flex-col gap-4 border border-white/60 dark:border-white/10 shadow-lg">
+          {/* Specular top reflection */}
+          <div className="liquid-specular-top" />
+
           {/* Brand Logo */}
           <NavLink to="/" className="flex items-center gap-3 px-2 py-1 group">
-            <div className="w-9 h-9 rounded-full bg-red-500 flex items-center justify-center shadow-lg shadow-red-500/30 group-hover:scale-105 transition-transform">
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center shadow-lg shadow-red-500/35 group-hover:scale-105 transition-transform border-t border-white/40">
               <Disc className="w-5 h-5 text-white animate-spin-slow" />
             </div>
             <div className="flex items-center">
@@ -63,8 +67,8 @@ export const Sidebar: React.FC = () => {
             </div>
           </NavLink>
 
-          {/* Navigation Links */}
-          <nav className="flex flex-col gap-1">
+          {/* Navigation Links with Liquid Water-Drop Effect */}
+          <LiquidNavContainer direction="vertical" className="flex flex-col gap-1">
             <NavLink to="/" className={navLinkClass}>
               <Home className="w-5 h-5" />
               <span>Home</span>
@@ -76,20 +80,31 @@ export const Sidebar: React.FC = () => {
             </NavLink>
 
             <NavLink to="/suggestions" className={navLinkClass}>
-              <Sparkles className="w-5 h-5 text-red-500" />
-              <span>Suggestions</span>
+              {({ isActive }) => (
+                <>
+                  <Sparkles className={`w-5 h-5 transition-colors ${isActive ? 'text-white' : 'text-red-500'}`} />
+                  <span>Suggestions</span>
+                </>
+              )}
             </NavLink>
 
             <NavLink to="/playlists" className={navLinkClass}>
-              <Music className="w-5 h-5 text-red-500" />
-              <span>Curated Playlists</span>
+              {({ isActive }) => (
+                <>
+                  <Music className={`w-5 h-5 transition-colors ${isActive ? 'text-white' : 'text-red-500'}`} />
+                  <span>Curated Playlists</span>
+                </>
+              )}
             </NavLink>
-          </nav>
+          </LiquidNavContainer>
         </div>
 
         {/* Middle Section: Quick Access & Playlists */}
-        <div className="bg-white dark:bg-[#14151a] rounded-3xl flex-1 flex flex-col p-4 gap-4 overflow-hidden min-h-0 border border-black/5 dark:border-white/5 shadow-sm">
-          {/* Quick links */}
+        <div className="relative overflow-hidden bg-white/70 dark:bg-[#11131c]/65 backdrop-blur-2xl rounded-3xl flex-1 flex flex-col p-4 gap-4 min-h-0 border border-white/60 dark:border-white/10 shadow-lg">
+          {/* Specular top reflection */}
+          <div className="liquid-specular-top" />
+
+          {/* Quick links with Liquid Water-Drop Effect */}
           <div className="flex flex-col gap-1 border-b border-black/5 dark:border-white/10 pb-3">
             <button
               onClick={() => {
@@ -99,43 +114,45 @@ export const Sidebar: React.FC = () => {
                   setIsCreateModalOpen(true);
                 }
               }}
-              className="flex items-center gap-3.5 px-4 py-2.5 rounded-2xl text-sm font-bold text-zinc-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transition-all w-full text-left group"
+              className="liquid-btn flex items-center gap-3.5 px-4 py-2.5 rounded-2xl text-sm font-bold text-zinc-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/8 transition-all w-full text-left group"
             >
-              <div className="w-6 h-6 rounded-lg bg-black/5 dark:bg-white/10 group-hover:bg-red-500 flex items-center justify-center transition-colors">
+              <div className="w-6 h-6 rounded-lg bg-black/5 dark:bg-white/10 group-hover:bg-red-500 flex items-center justify-center transition-colors border border-black/5 dark:border-white/10">
                 <PlusSquare className="w-4 h-4 text-zinc-600 dark:text-zinc-300 group-hover:text-white" />
               </div>
               <span>Create Playlist</span>
             </button>
 
-            <NavLink to="/liked" className={navLinkClass}>
-              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-500 flex items-center justify-center shadow-sm">
-                <Heart className="w-3.5 h-3.5 text-white fill-current" />
-              </div>
-              <span>Liked Songs</span>
-            </NavLink>
-
-            <NavLink to="/recently-played" className={navLinkClass}>
-              <div className="w-6 h-6 rounded-lg bg-black/5 dark:bg-white/10 flex items-center justify-center">
-                <Clock className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-300" />
-              </div>
-              <span>Recently Played</span>
-            </NavLink>
-
-            <NavLink to="/settings" className={navLinkClass}>
-              <div className="w-6 h-6 rounded-lg bg-black/5 dark:bg-white/10 flex items-center justify-center">
-                <Settings className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-300" />
-              </div>
-              <span>Settings</span>
-            </NavLink>
-
-            {user?.role === 'ADMIN' && (
-              <NavLink to="/admin" className={navLinkClass}>
-                <div className="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+            <LiquidNavContainer direction="vertical" className="flex flex-col gap-1">
+              <NavLink to="/liked" className={navLinkClass}>
+                <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-sm border-t border-white/30">
+                  <Heart className="w-3.5 h-3.5 text-white fill-current" />
                 </div>
-                <span className="text-emerald-500 font-bold">Admin Portal</span>
+                <span>Liked Songs</span>
               </NavLink>
-            )}
+
+              <NavLink to="/recently-played" className={navLinkClass}>
+                <div className="w-6 h-6 rounded-lg bg-black/5 dark:bg-white/10 flex items-center justify-center border border-black/5 dark:border-white/10">
+                  <Clock className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-300" />
+                </div>
+                <span>Recently Played</span>
+              </NavLink>
+
+              <NavLink to="/settings" className={navLinkClass}>
+                <div className="w-6 h-6 rounded-lg bg-black/5 dark:bg-white/10 flex items-center justify-center border border-black/5 dark:border-white/10">
+                  <Settings className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-300" />
+                </div>
+                <span>Settings</span>
+              </NavLink>
+
+              {user?.role === 'ADMIN' && (
+                <NavLink to="/admin" className={navLinkClass}>
+                  <div className="w-6 h-6 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  </div>
+                  <span className="text-emerald-500 font-bold">Admin Portal</span>
+                </NavLink>
+              )}
+            </LiquidNavContainer>
           </div>
 
           {/* User Playlists Scrollable List */}
@@ -156,10 +173,10 @@ export const Sidebar: React.FC = () => {
                     key={pl.id}
                     to={`/playlist/${pl.id}`}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors truncate ${
+                      `liquid-btn flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all truncate ${
                         isActive
-                          ? 'text-red-500 bg-red-500/10 font-bold'
-                          : 'text-zinc-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+                          ? 'text-red-500 bg-red-500/15 border border-red-500/20 font-bold shadow-sm'
+                          : 'text-zinc-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/40 dark:hover:bg-white/5'
                       }`
                     }
                   >

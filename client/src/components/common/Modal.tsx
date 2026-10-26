@@ -36,19 +36,20 @@ export const Modal: React.FC<ModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity animate-fade-in"
+        className="fixed inset-0 bg-black/70 backdrop-blur-md transition-opacity animate-fade-in"
         onClick={onClose}
       />
 
       {/* Dialog content */}
       <div
-        className={`relative z-10 w-full ${maxWidth} bg-[#181818] border border-white/10 rounded-2xl shadow-2xl p-6 overflow-hidden animate-slide-up`}
+        className={`relative z-10 w-full ${maxWidth} liquid-glass rounded-3xl shadow-2xl p-6 overflow-hidden animate-slide-up border border-white/20`}
       >
-        <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-5">
-          <h2 className="text-xl font-bold tracking-tight text-white">{title}</h2>
+        <div className="liquid-specular-top" />
+        <div className="flex items-center justify-between pb-4 border-b border-black/10 dark:border-white/10 mb-5">
+          <h2 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">{title}</h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-full text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-full text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all"
           >
             <X className="w-5 h-5" />
           </button>

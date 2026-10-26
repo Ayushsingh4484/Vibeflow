@@ -152,20 +152,23 @@ export const TopNav: React.FC<TopNavProps> = ({
   };
 
   return (
-    <header className="h-16 px-4 md:px-6 glass-nav flex items-center justify-between sticky top-0 z-20 select-none transition-colors">
+    <header className="h-16 px-4 md:px-6 liquid-glass-nav flex items-center justify-between sticky top-0 z-20 select-none transition-colors">
+      {/* Specular top light edge */}
+      <div className="liquid-specular-top" />
+
       {/* Navigation history & search bar */}
       <div className="flex items-center gap-3 flex-1 max-w-xl">
         <div className="hidden sm:flex items-center gap-1.5">
           <button
             onClick={() => navigate(-1)}
-            className="w-8 h-8 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-700 dark:text-zinc-300 flex items-center justify-center transition-colors"
+            className="liquid-btn w-8 h-8 rounded-full bg-white/60 dark:bg-white/10 hover:bg-white/90 dark:hover:bg-white/20 text-slate-700 dark:text-zinc-300 flex items-center justify-center transition-colors border border-black/5 dark:border-white/10 shadow-sm"
             title="Go back"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <button
             onClick={() => navigate(1)}
-            className="w-8 h-8 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-700 dark:text-zinc-300 flex items-center justify-center transition-colors"
+            className="liquid-btn w-8 h-8 rounded-full bg-white/60 dark:bg-white/10 hover:bg-white/90 dark:hover:bg-white/20 text-slate-700 dark:text-zinc-300 flex items-center justify-center transition-colors border border-black/5 dark:border-white/10 shadow-sm"
             title="Go forward"
           >
             <ChevronRight className="w-5 h-5" />
@@ -192,12 +195,13 @@ export const TopNav: React.FC<TopNavProps> = ({
                 }
               }}
               autoFocus
-              className="w-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 focus:bg-white dark:focus:bg-zinc-800 text-sm text-slate-900 dark:text-white placeholder-zinc-400 pl-10 pr-4 py-2 rounded-full border border-black/10 dark:border-white/10 focus:border-red-500 focus:outline-none transition-all shadow-sm"
+              className="w-full bg-white/60 dark:bg-white/10 hover:bg-white/80 dark:hover:bg-white/15 focus:bg-white/95 dark:focus:bg-[#181924]/95 text-sm text-slate-900 dark:text-white placeholder-zinc-400 pl-10 pr-4 py-2 rounded-full border border-black/10 dark:border-white/10 focus:border-red-500/80 focus:outline-none transition-all shadow-sm backdrop-blur-md"
             />
 
             {/* Keyword Suggestions Dropdown */}
             {isInputFocused && searchQuery?.trim() && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#181920] border border-black/10 dark:border-white/10 rounded-2xl shadow-2xl py-2 z-50 overflow-hidden backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white/85 dark:bg-[#181924]/90 border border-black/10 dark:border-white/15 rounded-2xl shadow-2xl py-2 z-50 overflow-hidden backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150">
+                <div className="liquid-specular-top" />
                 <div className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-zinc-400 flex items-center justify-between">
                   <span>Suggestions</span>
                   {suggestionsLoading && (
@@ -211,7 +215,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                       key={idx}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => handleSelectQuery(item)}
-                      className="px-3.5 py-2 hover:bg-red-50 dark:hover:bg-red-500/10 cursor-pointer flex items-center gap-2.5 text-sm text-slate-800 dark:text-zinc-200 hover:text-red-600 dark:hover:text-red-400 transition-colors group"
+                      className="px-3.5 py-2 hover:bg-red-500/10 cursor-pointer flex items-center gap-2.5 text-sm text-slate-800 dark:text-zinc-200 hover:text-red-500 transition-colors group"
                     >
                       <Search className="w-3.5 h-3.5 text-zinc-400 group-hover:text-red-500" />
                       <span className="truncate flex-1">{item}</span>
@@ -221,7 +225,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                   <div
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleSelectQuery(searchQuery.trim())}
-                    className="px-3.5 py-2 hover:bg-red-50 dark:hover:bg-red-500/10 cursor-pointer flex items-center gap-2.5 text-sm text-slate-800 dark:text-zinc-200 transition-colors"
+                    className="px-3.5 py-2 hover:bg-red-500/10 cursor-pointer flex items-center gap-2.5 text-sm text-slate-800 dark:text-zinc-200 transition-colors"
                   >
                     <Search className="w-3.5 h-3.5 text-zinc-400" />
                     <span>Search for "{searchQuery}"</span>
@@ -232,7 +236,8 @@ export const TopNav: React.FC<TopNavProps> = ({
 
             {/* Recent Search History Dropdown when input is empty */}
             {isInputFocused && !searchQuery?.trim() && history.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#181920] border border-black/10 dark:border-white/10 rounded-2xl shadow-2xl py-2 z-50 overflow-hidden backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white/85 dark:bg-[#181924]/90 border border-black/10 dark:border-white/15 rounded-2xl shadow-2xl py-2 z-50 overflow-hidden backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150">
+                <div className="liquid-specular-top" />
                 <div className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-zinc-400 flex items-center justify-between">
                   <span>Recent Searches</span>
                   <button
@@ -249,7 +254,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                     key={item.id}
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleSelectQuery(item.query)}
-                    className="px-3.5 py-2 hover:bg-red-50 dark:hover:bg-red-500/10 cursor-pointer flex items-center justify-between text-sm text-slate-800 dark:text-zinc-200 hover:text-red-600 dark:hover:text-red-400 transition-colors group"
+                    className="px-3.5 py-2 hover:bg-red-500/10 cursor-pointer flex items-center justify-between text-sm text-slate-800 dark:text-zinc-200 hover:text-red-500 transition-colors group"
                   >
                     <div className="flex items-center gap-2.5 truncate flex-1 mr-2">
                       <Search className="w-3.5 h-3.5 text-zinc-400 group-hover:text-red-500" />
@@ -278,7 +283,7 @@ export const TopNav: React.FC<TopNavProps> = ({
           <div className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-2 p-1 pr-3 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 rounded-full border border-black/5 dark:border-white/10 transition-all cursor-pointer"
+              className="liquid-btn flex items-center gap-2 p-1 pr-3 bg-white/60 dark:bg-white/10 hover:bg-white/80 dark:hover:bg-white/15 rounded-full border border-black/5 dark:border-white/10 transition-all cursor-pointer shadow-sm backdrop-blur-md"
             >
               {user.avatarUrl ? (
                 <img
@@ -287,7 +292,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                   className="w-7 h-7 rounded-full object-cover shadow-sm"
                 />
               ) : (
-                <div className="w-7 h-7 rounded-full bg-red-500 text-white font-extrabold text-xs flex items-center justify-center">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-red-500 to-rose-600 text-white font-extrabold text-xs flex items-center justify-center shadow-sm">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
               )}
@@ -302,7 +307,8 @@ export const TopNav: React.FC<TopNavProps> = ({
                   className="fixed inset-0 z-40"
                   onClick={() => setDropdownOpen(false)}
                 />
-                <div className="absolute right-0 top-11 z-50 w-56 bg-white dark:bg-[#1f2029] border border-black/10 dark:border-white/10 rounded-2xl shadow-2xl py-2 text-xs text-slate-700 dark:text-zinc-200 animate-slide-up">
+                <div className="absolute right-0 top-11 z-50 w-56 bg-white/85 dark:bg-[#181924]/90 backdrop-blur-2xl border border-black/10 dark:border-white/15 rounded-2xl shadow-2xl py-2 text-xs text-slate-700 dark:text-zinc-200 animate-slide-up overflow-hidden">
+                  <div className="liquid-specular-top" />
                   <div className="px-4 py-2 border-b border-black/5 dark:border-white/10">
                     <p className="font-bold text-slate-900 dark:text-white truncate">{user.name}</p>
                     <p className="text-zinc-500 dark:text-zinc-400 truncate text-[11px]">{user.email}</p>
@@ -311,7 +317,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                   <Link
                     to="/profile"
                     onClick={() => setDropdownOpen(false)}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 hover:bg-red-500/10 hover:text-red-500 transition-colors"
                   >
                     <User className="w-4 h-4 text-zinc-400" />
                     Profile
@@ -320,7 +326,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                   <Link
                     to="/settings"
                     onClick={() => setDropdownOpen(false)}
-                    className="w-full flex items-center gap-2.5 px-4 py-2.5 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 hover:bg-red-500/10 hover:text-red-500 transition-colors"
                   >
                     <Settings className="w-4 h-4 text-zinc-400" />
                     Settings
@@ -356,13 +362,13 @@ export const TopNav: React.FC<TopNavProps> = ({
           <div className="flex items-center gap-2">
             <Link
               to="/register"
-              className="text-xs font-bold text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white px-3 py-1.5 transition-colors"
+              className="liquid-btn text-xs font-bold text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white px-3 py-1.5 transition-colors"
             >
               Sign up
             </Link>
             <Link
               to="/login"
-              className="bg-red-500 hover:bg-red-600 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg shadow-red-500/20 hover:scale-105 active:scale-95 transition-all"
+              className="liquid-btn bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg shadow-red-500/25 border-t border-white/30"
             >
               Log in
             </Link>

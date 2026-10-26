@@ -8,6 +8,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { usePlayerStore } from '../store/usePlayerStore';
 import { Plus, Heart, Library } from 'lucide-react';
 import { CreatePlaylistModal } from '../components/common/CreatePlaylistModal';
+import { LiquidNavContainer } from '../components/common/LiquidNavIndicator';
 
 export const LibraryPage: React.FC = () => {
   const { isAuthenticated } = useAuthStore();
@@ -63,38 +64,45 @@ export const LibraryPage: React.FC = () => {
           Your Library
         </h1>
 
-        <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 p-1 rounded-full border border-black/5 dark:border-white/5">
+        <LiquidNavContainer
+          direction="horizontal"
+          className="flex items-center gap-1.5 bg-black/5 dark:bg-white/5 p-1 rounded-full border border-black/5 dark:border-white/5 relative"
+          pillBorderRadius="rounded-full"
+        >
           <button
+            data-active={activeFilter === 'all'}
             onClick={() => setActiveFilter('all')}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+            className={`relative z-10 px-4 py-1.5 rounded-full text-xs font-bold transition-colors duration-200 select-none ${
               activeFilter === 'all'
-                ? 'bg-red-500 text-white shadow-md'
+                ? 'text-white'
                 : 'text-zinc-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             All
           </button>
           <button
+            data-active={activeFilter === 'playlists'}
             onClick={() => setActiveFilter('playlists')}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+            className={`relative z-10 px-4 py-1.5 rounded-full text-xs font-bold transition-colors duration-200 select-none ${
               activeFilter === 'playlists'
-                ? 'bg-red-500 text-white shadow-md'
+                ? 'text-white'
                 : 'text-zinc-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             Playlists
           </button>
           <button
+            data-active={activeFilter === 'liked'}
             onClick={() => setActiveFilter('liked')}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
+            className={`relative z-10 px-4 py-1.5 rounded-full text-xs font-bold transition-colors duration-200 select-none ${
               activeFilter === 'liked'
-                ? 'bg-red-500 text-white shadow-md'
+                ? 'text-white'
                 : 'text-zinc-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             Liked Songs
           </button>
-        </div>
+        </LiquidNavContainer>
       </div>
 
       {/* Grid of Content */}

@@ -67,7 +67,7 @@ Run both backend API and frontend client concurrently:
 npm run dev
 ```
 
-- **Frontend Client**: [http://localhost:5173](http://localhost:5173)
+- **Frontend Client**: [http://localhost:5174](http://localhost:5174)
 - **Backend API Server**: [http://localhost:5000](http://localhost:5000)
 - **Static Media Uploads**: [http://localhost:5000/uploads](http://localhost:5000/uploads)
 

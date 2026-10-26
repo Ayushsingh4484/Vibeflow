@@ -71,19 +71,19 @@ export const TrackRow: React.FC<TrackRowProps> = ({
   return (
     <div
       onDoubleClick={handlePlayClick}
-      className={`group relative flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-2.5 rounded-xl transition-all cursor-pointer text-sm ${
+      className={`liquid-btn group relative flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-2.5 rounded-2xl transition-all cursor-pointer text-sm ${
         isCurrent
-          ? 'bg-red-500/10 text-red-500 font-bold'
-          : 'hover:bg-black/5 dark:hover:bg-white/5 text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white'
+          ? 'bg-red-500/15 text-red-500 font-bold border border-red-500/25 shadow-sm backdrop-blur-md'
+          : 'hover:bg-white/60 dark:hover:bg-white/8 backdrop-blur-sm border border-transparent hover:border-black/5 dark:hover:border-white/5 text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white'
       }`}
     >
       {/* Index & Play Button */}
       <div className="w-6 flex items-center justify-center shrink-0">
         {isCurrent && isPlaying ? (
           <div className="flex items-end gap-0.5 h-4 w-4 group-hover:hidden">
-            <span className="w-1 bg-red-500 rounded-full animate-bar-1" />
-            <span className="w-1 bg-red-500 rounded-full animate-bar-2" />
-            <span className="w-1 bg-red-500 rounded-full animate-bar-3" />
+            <span className="w-1 bg-red-500 rounded-full animate-bar-1 shadow-[0_0_4px_rgba(239,68,68,0.7)]" />
+            <span className="w-1 bg-red-500 rounded-full animate-bar-2 shadow-[0_0_4px_rgba(239,68,68,0.7)]" />
+            <span className="w-1 bg-red-500 rounded-full animate-bar-3 shadow-[0_0_4px_rgba(239,68,68,0.7)]" />
           </div>
         ) : (
           <span className={`text-zinc-400 dark:text-zinc-500 group-hover:hidden ${isCurrent ? 'text-red-500 font-bold' : ''}`}>
@@ -93,7 +93,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
 
         <button
           onClick={handlePlayClick}
-          className="hidden group-hover:flex items-center justify-center text-slate-900 dark:text-white hover:scale-110 transition-transform"
+          className="liquid-btn hidden group-hover:flex items-center justify-center text-slate-900 dark:text-white"
         >
           {isCurrent && isPlaying ? (
             <Pause className="w-4 h-4 fill-current text-red-500" />
@@ -110,29 +110,29 @@ export const TrackRow: React.FC<TrackRowProps> = ({
             src={(track.artworkUrl || track.coverUrl)!}
             alt={track.title}
             referrerPolicy="no-referrer"
-            className="w-10 h-10 rounded-lg object-cover shadow-sm bg-zinc-200 dark:bg-zinc-800 shrink-0"
+            className="w-10 h-10 rounded-xl object-cover shadow-sm bg-zinc-200 dark:bg-zinc-800 border border-white/20 shrink-0"
             onError={(e) => {
               (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(track.title)}`;
             }}
           />
         ) : (
-          <div className="w-10 h-10 rounded-lg bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center shrink-0 border border-white/10">
             <Play className="w-4 h-4 text-zinc-400" />
           </div>
         )}
 
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className={`truncate font-semibold ${isCurrent ? 'text-red-500' : 'text-slate-900 dark:text-white'}`}>
+            <span className={`truncate font-semibold ${isCurrent ? 'text-red-500 font-bold' : 'text-slate-900 dark:text-white'}`}>
               {track.title}
             </span>
             {isJamendo && (
-              <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-600 dark:text-amber-300 font-bold border border-amber-500/20 shrink-0">
+              <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-600 dark:text-amber-300 font-extrabold border border-amber-500/30 backdrop-blur-sm shrink-0">
                 Jamendo
               </span>
             )}
             {isYouTube && (
-              <span className="text-[9px] px-1.5 py-0.2 rounded bg-red-600/15 text-red-600 dark:text-red-400 font-bold border border-red-500/30 shrink-0">
+              <span className="text-[9px] px-1.5 py-0.2 rounded bg-red-600/20 text-red-600 dark:text-red-400 font-extrabold border border-red-500/40 backdrop-blur-sm shrink-0">
                 YouTube
               </span>
             )}
@@ -141,7 +141,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
             <Link
               to={`/artist/${track.artist.id}`}
               onClick={(e) => e.stopPropagation()}
-              className="text-xs text-zinc-500 dark:text-zinc-400 hover:underline truncate"
+              className="text-xs text-zinc-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors truncate font-medium"
             >
               {track.artist.name}
             </Link>
@@ -150,14 +150,14 @@ export const TrackRow: React.FC<TrackRowProps> = ({
       </div>
 
       {/* Album Title (Desktop Only) */}
-      <div className="hidden md:block w-1/4 truncate text-xs text-zinc-500 dark:text-zinc-400">
+      <div className="hidden md:block w-1/4 truncate text-xs text-zinc-500 dark:text-zinc-400 font-medium">
         {track.album?.title || 'Single'}
       </div>
 
       {/* Like Button */}
       <button
         onClick={handleLikeToggle}
-        className={`p-1.5 transition-all ${
+        className={`liquid-btn p-1.5 transition-all ${
           isLiked
             ? 'text-red-500'
             : 'text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-slate-900 dark:hover:text-white'
@@ -168,7 +168,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
       </button>
 
       {/* Duration */}
-      <div className="text-xs text-zinc-400 tabular-nums w-10 text-right shrink-0">
+      <div className="text-xs text-zinc-400 tabular-nums w-10 text-right shrink-0 font-medium">
         {formatTime(track.duration || 0)}
       </div>
 
@@ -179,7 +179,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
             e.stopPropagation();
             setShowMenu(!showMenu);
           }}
-          className="p-1.5 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-slate-900 dark:hover:text-white transition-opacity"
+          className="liquid-btn p-1.5 text-zinc-400 opacity-0 group-hover:opacity-100 hover:text-slate-900 dark:hover:text-white transition-opacity rounded-full hover:bg-white/40 dark:hover:bg-white/10"
           title="More options"
         >
           <MoreHorizontal className="w-4 h-4" />
@@ -188,7 +188,8 @@ export const TrackRow: React.FC<TrackRowProps> = ({
         {showMenu && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-            <div className="absolute right-0 top-8 z-50 w-48 bg-white dark:bg-[#1f2029] border border-black/10 dark:border-white/10 rounded-2xl shadow-2xl py-1 text-xs text-slate-700 dark:text-zinc-200 animate-slide-up">
+            <div className="absolute right-0 top-8 z-50 w-48 bg-white/85 dark:bg-[#181924]/90 backdrop-blur-2xl border border-black/10 dark:border-white/15 rounded-2xl shadow-2xl py-1 text-xs text-slate-700 dark:text-zinc-200 animate-slide-up overflow-hidden">
+              <div className="liquid-specular-top" />
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -196,7 +197,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
                   setShowMenu(false);
                   addToast('Added to queue', 'success');
                 }}
-                className="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                className="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-red-500/10 hover:text-red-500 transition-colors"
               >
                 <Plus className="w-4 h-4 text-zinc-400" />
                 Add to queue
@@ -209,7 +210,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
                   setShowMenu(false);
                   addToast('Will play next', 'success');
                 }}
-                className="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                className="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-red-500/10 hover:text-red-500 transition-colors"
               >
                 <ListPlus className="w-4 h-4 text-zinc-400" />
                 Play next
@@ -222,7 +223,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
                     onOpenAddToPlaylist(track);
                     setShowMenu(false);
                   }}
-                  className="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                  className="w-full flex items-center gap-2.5 px-3.5 py-2 hover:bg-red-500/10 hover:text-red-500 transition-colors"
                 >
                   <Plus className="w-4 h-4 text-zinc-400" />
                   Add to playlist

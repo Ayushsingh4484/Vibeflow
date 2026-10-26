@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Modal } from '../components/common/Modal';
 import { formatTime, formatDate } from '../utils/format';
+import { LiquidNavContainer } from '../components/common/LiquidNavIndicator';
 
 export const AdminPage: React.FC = () => {
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -220,44 +221,49 @@ export const AdminPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-7xl mx-auto">
+    <div className="flex flex-col gap-6 p-6 max-w-7xl mx-auto pb-24">
       {/* Admin Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-black/5 dark:border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-emerald-950 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-red-500/20 to-pink-500/10 border border-red-500/30 flex items-center justify-center text-red-500 shadow-inner">
             <ShieldCheck className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-white tracking-tight">VibeFlow Management Suite</h1>
-            <p className="text-xs text-zinc-400">Manage audio catalog, users, albums, and streaming metrics</p>
+            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">VibeFlow Management Suite</h1>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">Manage audio catalog, users, albums, and streaming metrics</p>
           </div>
         </div>
 
         {/* Global Action: Upload Audio */}
         <button
           onClick={() => setIsUploadModalOpen(true)}
-          className="px-5 py-2.5 rounded-full bg-brand-500 hover:bg-brand-400 text-black font-bold text-xs flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95 transition-all"
+          className="px-5 py-2.5 rounded-full bg-red-500 hover:bg-red-600 text-white font-bold text-xs flex items-center gap-2 shadow-xl shadow-red-500/20 hover:scale-105 active:scale-95 transition-all"
         >
           <Upload className="w-4 h-4" /> Upload New Track
         </button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+      {/* Tabs with Liquid Water-Drop Effect */}
+      <LiquidNavContainer
+        direction="horizontal"
+        className="flex items-center gap-2 overflow-x-auto pb-1"
+        pillBorderRadius="rounded-full"
+      >
         {(['overview', 'tracks', 'artists', 'albums', 'users'] as const).map((tab) => (
           <button
             key={tab}
+            data-active={activeTab === tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors ${
+            className={`liquid-btn relative z-10 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-colors duration-200 select-none ${
               activeTab === tab
-                ? 'bg-white text-black'
-                : 'bg-zinc-800 hover:bg-zinc-700 text-white'
+                ? 'text-white'
+                : 'text-zinc-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             {tab}
           </button>
         ))}
-      </div>
+      </LiquidNavContainer>
 
       {/* Tab Content */}
       {loading ? (
@@ -266,80 +272,89 @@ export const AdminPage: React.FC = () => {
         <div className="flex flex-col gap-6">
           {/* Stats Metric Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            <div className="p-4 rounded-xl bg-[#181818] border border-white/5 flex flex-col gap-1">
-              <span className="text-xs text-zinc-400 font-medium flex items-center gap-1.5">
-                <Music className="w-3.5 h-3.5 text-brand-400" /> Tracks
+            <div className="p-4 rounded-2xl liquid-glass-card relative overflow-hidden flex flex-col gap-1 shadow-md">
+              <div className="liquid-specular-top" />
+              <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium flex items-center gap-1.5">
+                <Music className="w-3.5 h-3.5 text-red-500" /> Tracks
               </span>
-              <span className="text-2xl font-black text-white">{stats?.totalTracks || 0}</span>
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{stats?.totalTracks || 0}</span>
             </div>
-            <div className="p-4 rounded-xl bg-[#181818] border border-white/5 flex flex-col gap-1">
-              <span className="text-xs text-zinc-400 font-medium flex items-center gap-1.5">
+            <div className="p-4 rounded-2xl liquid-glass-card relative overflow-hidden flex flex-col gap-1 shadow-md">
+              <div className="liquid-specular-top" />
+              <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5 text-blue-400" /> Artists
               </span>
-              <span className="text-2xl font-black text-white">{stats?.totalArtists || 0}</span>
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{stats?.totalArtists || 0}</span>
             </div>
-            <div className="p-4 rounded-xl bg-[#181818] border border-white/5 flex flex-col gap-1">
-              <span className="text-xs text-zinc-400 font-medium flex items-center gap-1.5">
+            <div className="p-4 rounded-2xl liquid-glass-card relative overflow-hidden flex flex-col gap-1 shadow-md">
+              <div className="liquid-specular-top" />
+              <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium flex items-center gap-1.5">
                 <Disc className="w-3.5 h-3.5 text-purple-400" /> Albums
               </span>
-              <span className="text-2xl font-black text-white">{stats?.totalAlbums || 0}</span>
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{stats?.totalAlbums || 0}</span>
             </div>
-            <div className="p-4 rounded-xl bg-[#181818] border border-white/5 flex flex-col gap-1">
-              <span className="text-xs text-zinc-400 font-medium flex items-center gap-1.5">
+            <div className="p-4 rounded-2xl liquid-glass-card relative overflow-hidden flex flex-col gap-1 shadow-md">
+              <div className="liquid-specular-top" />
+              <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium flex items-center gap-1.5">
                 <Radio className="w-3.5 h-3.5 text-emerald-400" /> Playlists
               </span>
-              <span className="text-2xl font-black text-white">{stats?.totalPlaylists || 0}</span>
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{stats?.totalPlaylists || 0}</span>
             </div>
-            <div className="p-4 rounded-xl bg-[#181818] border border-white/5 flex flex-col gap-1">
-              <span className="text-xs text-zinc-400 font-medium flex items-center gap-1.5">
+            <div className="p-4 rounded-2xl liquid-glass-card relative overflow-hidden flex flex-col gap-1 shadow-md">
+              <div className="liquid-specular-top" />
+              <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5 text-amber-400" /> Users
               </span>
-              <span className="text-2xl font-black text-white">{stats?.totalUsers || 0}</span>
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{stats?.totalUsers || 0}</span>
             </div>
-            <div className="p-4 rounded-xl bg-[#181818] border border-white/5 flex flex-col gap-1">
-              <span className="text-xs text-zinc-400 font-medium flex items-center gap-1.5">
+            <div className="p-4 rounded-2xl liquid-glass-card relative overflow-hidden flex flex-col gap-1 shadow-md">
+              <div className="liquid-specular-top" />
+              <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium flex items-center gap-1.5">
                 <BarChart3 className="w-3.5 h-3.5 text-pink-400" /> Total Plays
               </span>
-              <span className="text-2xl font-black text-white">{stats?.totalPlays || 0}</span>
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{stats?.totalPlays || 0}</span>
             </div>
           </div>
 
           {/* Quick Management Shortcuts */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-5 rounded-2xl bg-[#181818] border border-white/5 flex flex-col justify-between gap-4">
+            <div className="p-5 rounded-3xl liquid-glass-card relative overflow-hidden flex flex-col justify-between gap-4 shadow-lg">
+              <div className="liquid-specular-top" />
               <div>
-                <h3 className="font-bold text-white text-base">Audio Track Management</h3>
-                <p className="text-xs text-zinc-400 mt-1">Upload raw audio files and cover art directly to local or cloud storage.</p>
+                <h3 className="font-bold text-slate-900 dark:text-white text-base">Audio Track Management</h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Upload raw audio files and cover art directly to local or cloud storage.</p>
               </div>
               <button
                 onClick={() => setIsUploadModalOpen(true)}
-                className="w-full py-2 bg-brand-500 hover:bg-brand-400 text-black font-bold text-xs rounded-lg transition-colors"
+                className="w-full py-2 bg-red-500 hover:bg-red-600 text-white font-bold text-xs rounded-xl shadow-md transition-colors"
               >
                 Upload Track
               </button>
             </div>
 
-            <div className="p-5 rounded-2xl bg-[#181818] border border-white/5 flex flex-col justify-between gap-4">
+            <div className="p-5 rounded-3xl liquid-glass-card relative overflow-hidden flex flex-col justify-between gap-4 shadow-lg">
+              <div className="liquid-specular-top" />
               <div>
-                <h3 className="font-bold text-white text-base">Artist Directory</h3>
-                <p className="text-xs text-zinc-400 mt-1">Register new artist profiles, bios, and official artist imagery.</p>
+                <h3 className="font-bold text-slate-900 dark:text-white text-base">Artist Directory</h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Register new artist profiles, bios, and official artist imagery.</p>
               </div>
               <button
                 onClick={() => setIsArtistModalOpen(true)}
-                className="w-full py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-lg transition-colors"
+                className="w-full py-2 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-900 dark:text-white font-bold text-xs rounded-xl transition-colors"
               >
                 Add Artist
               </button>
             </div>
 
-            <div className="p-5 rounded-2xl bg-[#181818] border border-white/5 flex flex-col justify-between gap-4">
+            <div className="p-5 rounded-3xl liquid-glass-card relative overflow-hidden flex flex-col justify-between gap-4 shadow-lg">
+              <div className="liquid-specular-top" />
               <div>
-                <h3 className="font-bold text-white text-base">Album Releases</h3>
-                <p className="text-xs text-zinc-400 mt-1">Create albums and organize songs into full discography releases.</p>
+                <h3 className="font-bold text-slate-900 dark:text-white text-base">Album Releases</h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">Create albums and organize songs into full discography releases.</p>
               </div>
               <button
                 onClick={() => setIsAlbumModalOpen(true)}
-                className="w-full py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-lg transition-colors"
+                className="w-full py-2 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-900 dark:text-white font-bold text-xs rounded-xl transition-colors"
               >
                 Add Album
               </button>
@@ -349,54 +364,55 @@ export const AdminPage: React.FC = () => {
       ) : activeTab === 'tracks' ? (
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white">Tracks Catalog ({tracks.length})</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Tracks Catalog ({tracks.length})</h2>
             <button
               onClick={() => setIsUploadModalOpen(true)}
-              className="px-4 py-2 rounded-lg bg-brand-500 text-black font-bold text-xs flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-red-500/20"
             >
               <Plus className="w-4 h-4" /> Add Track
             </button>
           </div>
 
-          <div className="bg-[#181818] rounded-xl border border-white/5 overflow-hidden">
-            <table className="w-full text-left text-xs text-zinc-300">
-              <thead className="bg-white/5 text-zinc-400 uppercase font-semibold border-b border-white/5">
+          <div className="liquid-glass-card rounded-2xl border border-black/5 dark:border-white/10 overflow-hidden relative shadow-lg">
+            <div className="liquid-specular-top" />
+            <table className="w-full text-left text-xs text-zinc-700 dark:text-zinc-300">
+              <thead className="bg-black/5 dark:bg-white/5 text-zinc-500 dark:text-zinc-400 uppercase font-semibold border-b border-black/5 dark:border-white/10">
                 <tr>
-                  <th className="p-3">Track</th>
-                  <th className="p-3">Artist</th>
-                  <th className="p-3">Genre</th>
-                  <th className="p-3">Duration</th>
-                  <th className="p-3">Plays</th>
-                  <th className="p-3 text-right">Actions</th>
+                  <th className="p-3.5">Track</th>
+                  <th className="p-3.5">Artist</th>
+                  <th className="p-3.5">Genre</th>
+                  <th className="p-3.5">Duration</th>
+                  <th className="p-3.5">Plays</th>
+                  <th className="p-3.5 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-black/5 dark:divide-white/5">
                 {tracks.map((t) => (
-                  <tr key={t.id} className="hover:bg-white/5 transition-colors">
-                    <td className="p-3 flex items-center gap-3">
+                  <tr key={t.id} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                    <td className="p-3.5 flex items-center gap-3">
                       {t.coverUrl && (
-                        <img src={t.coverUrl} alt={t.title} className="w-8 h-8 rounded object-cover" />
+                        <img src={t.coverUrl} alt={t.title} className="w-8 h-8 rounded-lg object-cover shadow-sm" />
                       )}
-                      <span className="font-medium text-white">{t.title}</span>
+                      <span className="font-semibold text-slate-900 dark:text-white">{t.title}</span>
                     </td>
-                    <td className="p-3">{t.artist?.name || '—'}</td>
-                    <td className="p-3">
-                      <span className="px-2 py-0.5 rounded bg-white/5 text-zinc-300">{t.genre}</span>
+                    <td className="p-3.5">{t.artist?.name || '—'}</td>
+                    <td className="p-3.5">
+                      <span className="px-2.5 py-0.5 rounded-full bg-black/5 dark:bg-white/5 text-zinc-600 dark:text-zinc-300 text-[11px] font-medium border border-black/5 dark:border-white/5">{t.genre}</span>
                     </td>
-                    <td className="p-3 tabular-nums">{formatTime(t.duration)}</td>
-                    <td className="p-3 font-semibold text-brand-400">{t.playCount}</td>
-                    <td className="p-3 text-right">
+                    <td className="p-3.5 tabular-nums font-mono">{formatTime(t.duration)}</td>
+                    <td className="p-3.5 font-bold text-red-500 font-mono">{t.playCount}</td>
+                    <td className="p-3.5 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => playTrack(t, tracks)}
-                          className="p-1.5 rounded-md hover:bg-white/10 text-zinc-400 hover:text-white"
+                          className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-zinc-500 hover:text-slate-900 dark:hover:text-white"
                           title="Preview"
                         >
                           <Play className="w-3.5 h-3.5 fill-current" />
                         </button>
                         <button
                           onClick={() => handleDeleteTrack(t.id, t.title)}
-                          className="p-1.5 rounded-md hover:bg-rose-500/20 text-zinc-400 hover:text-rose-400"
+                          className="p-1.5 rounded-lg hover:bg-rose-500/20 text-zinc-500 hover:text-rose-500"
                           title="Delete"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -412,10 +428,10 @@ export const AdminPage: React.FC = () => {
       ) : activeTab === 'artists' ? (
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white">Artists ({artists.length})</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Artists ({artists.length})</h2>
             <button
               onClick={() => setIsArtistModalOpen(true)}
-              className="px-4 py-2 rounded-lg bg-brand-500 text-black font-bold text-xs flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-red-500/20"
             >
               <Plus className="w-4 h-4" /> Add Artist
             </button>
@@ -425,25 +441,26 @@ export const AdminPage: React.FC = () => {
             {artists.map((art) => (
               <div
                 key={art.id}
-                className="p-4 rounded-xl bg-[#181818] border border-white/5 flex items-center justify-between gap-3"
+                className="p-4 rounded-2xl liquid-glass-card relative overflow-hidden flex items-center justify-between gap-3 shadow-md"
               >
+                <div className="liquid-specular-top" />
                 <div className="flex items-center gap-3 min-w-0">
                   {art.imageUrl ? (
-                    <img src={art.imageUrl} alt={art.name} className="w-12 h-12 rounded-full object-cover shrink-0" />
+                    <img src={art.imageUrl} alt={art.name} className="w-12 h-12 rounded-full object-cover shrink-0 ring-2 ring-white/10" />
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center font-bold">
+                    <div className="w-12 h-12 rounded-full bg-red-500 text-white flex items-center justify-center font-black">
                       {art.name.charAt(0)}
                     </div>
                   )}
                   <div className="min-w-0">
-                    <h4 className="font-bold text-white text-sm truncate">{art.name}</h4>
-                    <p className="text-[11px] text-zinc-400">{art._count?.tracks || 0} tracks</p>
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm truncate">{art.name}</h4>
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">{art._count?.tracks || 0} tracks</p>
                   </div>
                 </div>
 
                 <button
                   onClick={() => handleDeleteArtist(art.id, art.name)}
-                  className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+                  className="p-1.5 text-zinc-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -454,10 +471,10 @@ export const AdminPage: React.FC = () => {
       ) : activeTab === 'albums' ? (
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white">Albums ({albums.length})</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Albums ({albums.length})</h2>
             <button
               onClick={() => setIsAlbumModalOpen(true)}
-              className="px-4 py-2 rounded-lg bg-brand-500 text-black font-bold text-xs flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-red-500/20"
             >
               <Plus className="w-4 h-4" /> Add Album
             </button>
@@ -467,25 +484,26 @@ export const AdminPage: React.FC = () => {
             {albums.map((alb) => (
               <div
                 key={alb.id}
-                className="p-4 rounded-xl bg-[#181818] border border-white/5 flex items-center justify-between gap-3"
+                className="p-4 rounded-2xl liquid-glass-card relative overflow-hidden flex items-center justify-between gap-3 shadow-md"
               >
+                <div className="liquid-specular-top" />
                 <div className="flex items-center gap-3 min-w-0">
                   {alb.coverUrl ? (
-                    <img src={alb.coverUrl} alt={alb.title} className="w-12 h-12 rounded-lg object-cover shrink-0" />
+                    <img src={alb.coverUrl} alt={alb.title} className="w-12 h-12 rounded-xl object-cover shrink-0 shadow-sm" />
                   ) : (
-                    <div className="w-12 h-12 rounded-lg bg-zinc-800 flex items-center justify-center">
-                      <Disc className="w-6 h-6 text-zinc-500" />
+                    <div className="w-12 h-12 rounded-xl bg-black/5 dark:bg-white/10 flex items-center justify-center">
+                      <Disc className="w-6 h-6 text-zinc-400" />
                     </div>
                   )}
                   <div className="min-w-0">
-                    <h4 className="font-bold text-white text-sm truncate">{alb.title}</h4>
-                    <p className="text-[11px] text-zinc-400">{alb.artist?.name || 'Artist'}</p>
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm truncate">{alb.title}</h4>
+                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400">{alb.artist?.name || 'Artist'}</p>
                   </div>
                 </div>
 
                 <button
                   onClick={() => handleDeleteAlbum(alb.id, alb.title)}
-                  className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+                  className="p-1.5 text-zinc-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -495,46 +513,47 @@ export const AdminPage: React.FC = () => {
         </div>
       ) : activeTab === 'users' ? (
         <div className="flex flex-col gap-4">
-          <h2 className="text-lg font-bold text-white">Users Management ({users.length})</h2>
-          <div className="bg-[#181818] rounded-xl border border-white/5 overflow-hidden">
-            <table className="w-full text-left text-xs text-zinc-300">
-              <thead className="bg-white/5 text-zinc-400 uppercase font-semibold border-b border-white/5">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Users Management ({users.length})</h2>
+          <div className="liquid-glass-card rounded-2xl border border-black/5 dark:border-white/10 overflow-hidden relative shadow-lg">
+            <div className="liquid-specular-top" />
+            <table className="w-full text-left text-xs text-zinc-700 dark:text-zinc-300">
+              <thead className="bg-black/5 dark:bg-white/5 text-zinc-500 dark:text-zinc-400 uppercase font-semibold border-b border-black/5 dark:border-white/10">
                 <tr>
-                  <th className="p-3">User</th>
-                  <th className="p-3">Email</th>
-                  <th className="p-3">Role</th>
-                  <th className="p-3">Joined</th>
-                  <th className="p-3 text-right">Actions</th>
+                  <th className="p-3.5">User</th>
+                  <th className="p-3.5">Email</th>
+                  <th className="p-3.5">Role</th>
+                  <th className="p-3.5">Joined</th>
+                  <th className="p-3.5 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-black/5 dark:divide-white/5">
                 {users.map((u) => (
-                  <tr key={u.id} className="hover:bg-white/5 transition-colors">
-                    <td className="p-3 font-semibold text-white">{u.name}</td>
-                    <td className="p-3 text-zinc-400">{u.email}</td>
-                    <td className="p-3">
+                  <tr key={u.id} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                    <td className="p-3.5 font-bold text-slate-900 dark:text-white">{u.name}</td>
+                    <td className="p-3.5 text-zinc-500 dark:text-zinc-400">{u.email}</td>
+                    <td className="p-3.5">
                       <span
                         className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                           u.role === 'ADMIN'
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                            : 'bg-zinc-800 text-zinc-300'
+                            ? 'bg-emerald-500/20 text-emerald-500 border border-emerald-500/30'
+                            : 'bg-black/5 dark:bg-white/10 text-zinc-600 dark:text-zinc-300'
                         }`}
                       >
                         {u.role}
                       </span>
                     </td>
-                    <td className="p-3 text-zinc-400">{formatDate(u.createdAt)}</td>
-                    <td className="p-3 text-right">
+                    <td className="p-3.5 text-zinc-500 dark:text-zinc-400 font-mono">{formatDate(u.createdAt)}</td>
+                    <td className="p-3.5 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleUpdateRole(u.id, u.role)}
-                          className="px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 text-white font-medium text-[11px]"
+                          className="px-2.5 py-1 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 text-slate-900 dark:text-white font-semibold text-[11px] transition-colors"
                         >
                           {u.role === 'ADMIN' ? 'Make User' : 'Make Admin'}
                         </button>
                         <button
                           onClick={() => handleDeleteUser(u.id, u.name)}
-                          className="p-1.5 rounded hover:bg-rose-500/20 text-zinc-400 hover:text-rose-400"
+                          className="p-1.5 rounded-lg hover:bg-rose-500/20 text-zinc-400 hover:text-rose-500 transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -565,7 +584,7 @@ export const AdminPage: React.FC = () => {
                 value={uploadTitle}
                 onChange={(e) => setUploadTitle(e.target.value)}
                 required
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500"
+                className="w-full bg-black/10 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-red-500"
               />
             </div>
 
@@ -577,7 +596,7 @@ export const AdminPage: React.FC = () => {
                 value={uploadArtistName}
                 onChange={(e) => setUploadArtistName(e.target.value)}
                 required
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500"
+                className="w-full bg-black/10 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-red-500"
               />
             </div>
 
@@ -588,7 +607,7 @@ export const AdminPage: React.FC = () => {
                 placeholder="e.g. Neon Horizon"
                 value={uploadAlbumTitle}
                 onChange={(e) => setUploadAlbumTitle(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500"
+                className="w-full bg-black/10 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-red-500"
               />
             </div>
 
@@ -597,38 +616,38 @@ export const AdminPage: React.FC = () => {
               <select
                 value={uploadGenre}
                 onChange={(e) => setUploadGenre(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500"
+                className="w-full bg-black/10 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-red-500"
               >
-                <option value="Electronic">Electronic</option>
-                <option value="Synthwave">Synthwave</option>
-                <option value="Lo-Fi">Lo-Fi</option>
-                <option value="Ambient">Ambient</option>
-                <option value="Cyberpunk">Cyberpunk</option>
-                <option value="Deep House">Deep House</option>
-                <option value="Indie Pop">Indie Pop</option>
-                <option value="Melodic Techno">Melodic Techno</option>
-                <option value="Chillout">Chillout</option>
+                <option value="Electronic" className="bg-slate-900 text-white">Electronic</option>
+                <option value="Synthwave" className="bg-slate-900 text-white">Synthwave</option>
+                <option value="Lo-Fi" className="bg-slate-900 text-white">Lo-Fi</option>
+                <option value="Ambient" className="bg-slate-900 text-white">Ambient</option>
+                <option value="Cyberpunk" className="bg-slate-900 text-white">Cyberpunk</option>
+                <option value="Deep House" className="bg-slate-900 text-white">Deep House</option>
+                <option value="Indie Pop" className="bg-slate-900 text-white">Indie Pop</option>
+                <option value="Melodic Techno" className="bg-slate-900 text-white">Melodic Techno</option>
+                <option value="Chillout" className="bg-slate-900 text-white">Chillout</option>
               </select>
             </div>
           </div>
 
           {/* Audio File Input */}
-          <div className="p-3.5 rounded-xl bg-zinc-900 border border-zinc-700 flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-white flex items-center gap-1.5">
-              <Music className="w-4 h-4 text-brand-400" /> Select Audio File (MP3, WAV, FLAC, OGG) *
+          <div className="p-3.5 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <Music className="w-4 h-4 text-red-500" /> Select Audio File (MP3, WAV, FLAC, OGG) *
             </label>
             <input
               type="file"
               accept="audio/*,.mp3,.wav,.flac,.ogg,.m4a"
               onChange={(e) => setUploadAudioFile(e.target.files?.[0] || null)}
               required
-              className="text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-500 file:text-black hover:file:bg-brand-400 cursor-pointer"
+              className="text-xs text-zinc-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-red-500 file:text-white hover:file:bg-red-600 cursor-pointer"
             />
           </div>
 
           {/* Artwork File Input */}
-          <div className="p-3.5 rounded-xl bg-zinc-900 border border-zinc-700 flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-white flex items-center gap-1.5">
+          <div className="p-3.5 rounded-2xl bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
               <Disc className="w-4 h-4 text-purple-400" /> Select Artwork File (JPG, PNG, WEBP, SVG)
             </label>
             <input
@@ -639,7 +658,7 @@ export const AdminPage: React.FC = () => {
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-3 border-t border-white/10">
+          <div className="flex justify-end gap-3 pt-3 border-t border-black/10 dark:border-white/10">
             <button
               type="button"
               onClick={() => setIsUploadModalOpen(false)}
@@ -650,7 +669,7 @@ export const AdminPage: React.FC = () => {
             <button
               type="submit"
               disabled={uploadLoading}
-              className="px-6 py-2 rounded-full text-xs font-bold bg-brand-500 hover:bg-brand-400 text-black shadow-lg disabled:opacity-50 flex items-center gap-1.5"
+              className="px-6 py-2 rounded-full text-xs font-bold bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20 disabled:opacity-50 flex items-center gap-1.5 transition-all"
             >
               {uploadLoading ? 'Uploading...' : 'Save & Publish Track'}
             </button>
@@ -672,7 +691,7 @@ export const AdminPage: React.FC = () => {
               value={artistName}
               onChange={(e) => setArtistName(e.target.value)}
               required
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500"
+              className="w-full bg-black/10 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-red-500"
             />
           </div>
 
@@ -682,7 +701,7 @@ export const AdminPage: React.FC = () => {
               value={artistBio}
               onChange={(e) => setArtistBio(e.target.value)}
               rows={3}
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 resize-none"
+              className="w-full bg-black/10 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-red-500 resize-none"
             />
           </div>
 
@@ -696,7 +715,7 @@ export const AdminPage: React.FC = () => {
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-3 border-t border-white/10">
+          <div className="flex justify-end gap-3 pt-3 border-t border-black/10 dark:border-white/10">
             <button
               type="button"
               onClick={() => setIsArtistModalOpen(false)}
@@ -706,7 +725,7 @@ export const AdminPage: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-6 py-2 rounded-full text-xs font-bold bg-brand-500 hover:bg-brand-400 text-black shadow-lg"
+              className="px-6 py-2 rounded-full text-xs font-bold bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20 transition-all"
             >
               Create Artist
             </button>
@@ -728,7 +747,7 @@ export const AdminPage: React.FC = () => {
               value={albumTitle}
               onChange={(e) => setAlbumTitle(e.target.value)}
               required
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500"
+              className="w-full bg-black/10 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-red-500"
             />
           </div>
 
@@ -738,11 +757,11 @@ export const AdminPage: React.FC = () => {
               value={albumArtistId}
               onChange={(e) => setAlbumArtistId(e.target.value)}
               required
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500"
+              className="w-full bg-black/10 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-red-500"
             >
-              <option value="">Select an Artist</option>
+              <option value="" className="bg-slate-900 text-white">Select an Artist</option>
               {artists.map((a) => (
-                <option key={a.id} value={a.id}>
+                <option key={a.id} value={a.id} className="bg-slate-900 text-white">
                   {a.name}
                 </option>
               ))}
@@ -759,7 +778,7 @@ export const AdminPage: React.FC = () => {
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-3 border-t border-white/10">
+          <div className="flex justify-end gap-3 pt-3 border-t border-black/10 dark:border-white/10">
             <button
               type="button"
               onClick={() => setIsAlbumModalOpen(false)}
@@ -769,7 +788,7 @@ export const AdminPage: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-6 py-2 rounded-full text-xs font-bold bg-brand-500 hover:bg-brand-400 text-black shadow-lg"
+              className="px-6 py-2 rounded-full text-xs font-bold bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20 transition-all"
             >
               Create Album
             </button>

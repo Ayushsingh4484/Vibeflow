@@ -38,17 +38,20 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
   return (
     <div
       onClick={handleCardClick}
-      className="group relative bg-white dark:bg-[#181920] hover:bg-zinc-50 dark:hover:bg-[#20222c] p-3.5 sm:p-4 rounded-3xl transition-all duration-300 cursor-pointer flex flex-col gap-3 border border-black/5 dark:border-white/5 hover:border-red-500/30 shadow-sm hover:shadow-2xl hover:-translate-y-1.5 select-none shrink-0"
+      className="liquid-glass-card group relative p-3.5 sm:p-4 rounded-3xl cursor-pointer flex flex-col gap-3 select-none shrink-0 overflow-hidden"
     >
+      {/* Specular top light edge */}
+      <div className="liquid-specular-top opacity-60 group-hover:opacity-100 transition-opacity" />
+
       {/* Artwork Container */}
-      <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-zinc-800 shadow-md">
+      <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-zinc-800 shadow-md border border-black/5 dark:border-white/10">
         {coverUrl ? (
           <img
             src={coverUrl}
             alt={playlist.name}
             loading="lazy"
             referrerPolicy="no-referrer"
-            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-108 brightness-95 group-hover:brightness-105"
+            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 brightness-95 group-hover:brightness-105"
             onError={(e) => {
               const img = e.target as HTMLImageElement;
               if (coverUrl.startsWith('http') && !img.src.includes('/api/stream/image')) {
@@ -69,14 +72,14 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
 
         {/* Category / Mood Tag Badge */}
         {tag && (
-          <div className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider uppercase bg-black/60 backdrop-blur-md text-white border border-white/10 shadow-sm">
+          <div className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-[10px] font-black tracking-wider uppercase bg-black/60 backdrop-blur-md text-white border border-white/15 shadow-sm">
             {tag}
           </div>
         )}
 
         {/* Track Count Pill */}
         {trackCount && (
-          <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md text-[9px] font-bold tracking-tight bg-black/50 backdrop-blur-md text-zinc-300 border border-white/10">
+          <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md text-[9px] font-bold tracking-tight bg-black/60 backdrop-blur-md text-zinc-300 border border-white/15">
             {trackCount} tracks
           </div>
         )}
@@ -85,7 +88,7 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
         <button
           onClick={handlePlayClick}
           title={`Play ${playlist.name}`}
-          className="absolute bottom-3 right-3 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-xl shadow-red-600/50 opacity-0 translate-y-3 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:scale-110 active:scale-95 z-10"
+          className="liquid-btn absolute bottom-3 right-3 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-gradient-to-tr from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white flex items-center justify-center shadow-xl shadow-red-600/40 border-t border-white/40 opacity-0 translate-y-3 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200 z-10"
         >
           {isPlaying ? (
             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

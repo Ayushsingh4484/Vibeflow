@@ -126,6 +126,7 @@ export const SearchPage: React.FC<SearchPageProps> = ({ searchQuery, onSearchCha
                 onClick={() => handleSelectQuery(cat.query)}
                 className="group relative aspect-square rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-white/10 flex flex-col justify-between p-4 sm:p-5 select-none bg-zinc-900"
               >
+                <div className="liquid-specular-top" />
                 {/* Real Music / Genre Background Image */}
                 <img
                   src={cat.imageUrl}

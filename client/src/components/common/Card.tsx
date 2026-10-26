@@ -37,10 +37,13 @@ export const Card: React.FC<CardProps> = ({
   return (
     <div
       onClick={handleClick}
-      className="group relative bg-white dark:bg-[#1c1d24] hover:bg-zinc-50 dark:hover:bg-[#252632] p-3.5 rounded-2xl md:rounded-3xl transition-all duration-300 cursor-pointer flex flex-col gap-3 border border-black/5 dark:border-white/5 hover:border-black/10 dark:hover:border-white/10 shadow-sm hover:shadow-2xl hover:-translate-y-1.5 shrink-0"
+      className="liquid-glass-card group relative p-3.5 rounded-2xl md:rounded-3xl cursor-pointer flex flex-col gap-3 shrink-0 overflow-hidden"
     >
+      {/* Specular top light edge */}
+      <div className="liquid-specular-top opacity-60 group-hover:opacity-100 transition-opacity" />
+
       {/* Artwork Container */}
-      <div className="relative aspect-square w-full overflow-hidden shadow-md bg-zinc-100 dark:bg-zinc-800 rounded-xl md:rounded-2xl">
+      <div className="relative aspect-square w-full overflow-hidden shadow-md bg-zinc-100 dark:bg-zinc-800/80 rounded-xl md:rounded-2xl border border-black/5 dark:border-white/10">
         {isArtist ? (
           <ArtistAvatar
             src={imageUrl}
@@ -72,10 +75,10 @@ export const Card: React.FC<CardProps> = ({
         {/* Source Badge */}
         {(badge || source === 'jamendo' || source === 'youtube') && (
           <span
-            className={`absolute top-2.5 left-2.5 px-2 py-0.5 rounded-md text-[9px] font-extrabold backdrop-blur-md border tracking-wider uppercase ${
+            className={`absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-md text-[9px] font-black backdrop-blur-md border tracking-wider uppercase shadow-sm ${
               source === 'youtube'
                 ? 'bg-red-600/80 text-white border-red-500/40'
-                : 'bg-black/70 text-amber-300 border-amber-500/30'
+                : 'bg-black/60 text-amber-300 border-amber-500/30'
             }`}
           >
             {badge || (source === 'youtube' ? 'YouTube' : 'Jamendo')}
@@ -89,7 +92,7 @@ export const Card: React.FC<CardProps> = ({
               e.stopPropagation();
               onPlay(e);
             }}
-            className="absolute bottom-3 right-3 w-11 h-11 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-xl shadow-red-500/30 opacity-0 translate-y-3 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:scale-110 active:scale-95"
+            className="liquid-btn absolute bottom-3 right-3 w-11 h-11 bg-gradient-to-tr from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white rounded-full flex items-center justify-center shadow-xl shadow-red-500/40 border-t border-white/40 opacity-0 translate-y-3 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200"
             title={`Play ${title}`}
           >
             <Play className="w-5 h-5 fill-current ml-0.5 text-white" />

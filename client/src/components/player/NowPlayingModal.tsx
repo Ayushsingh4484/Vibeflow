@@ -166,27 +166,32 @@ export const NowPlayingModal: React.FC = () => {
   const upcomingQueue = queue.slice(queueIndex + 1);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-zinc-950 text-white animate-slide-up select-none overflow-hidden">
-      {/* Dynamic Ambient Background Blur */}
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#07080d] text-white animate-slide-up select-none overflow-hidden">
+      {/* Dynamic Ambient Background Blur with Artwork Refraction */}
       <div
-        className="absolute inset-0 bg-cover bg-center filter blur-3xl opacity-25 scale-125 transition-all duration-700 pointer-events-none"
+        className="absolute inset-0 bg-cover bg-center filter blur-3xl opacity-20 scale-125 transition-all duration-700 pointer-events-none"
         style={{ backgroundImage: `url(${artwork})` }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/85 to-zinc-950 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/80 to-[#07080d] pointer-events-none" />
+
+      {/* Ambient Liquid Glow Orbs */}
+      <div className="pointer-events-none absolute -top-32 -left-32 w-96 h-96 ambient-liquid-glow-1 rounded-full opacity-50" />
+      <div className="pointer-events-none absolute -bottom-32 -right-32 w-96 h-96 ambient-liquid-glow-2 rounded-full opacity-40" />
 
       {/* Top Header Bar */}
-      <header className="relative z-20 flex items-center justify-between px-4 sm:px-8 py-3.5 border-b border-white/10 backdrop-blur-xl shrink-0">
+      <header className="relative z-20 flex items-center justify-between px-4 sm:px-8 py-3.5 border-b border-white/10 backdrop-blur-2xl shrink-0 bg-white/[0.03]">
+        <div className="liquid-specular-top" />
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsNowPlayingOpen(false)}
-            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+            className="liquid-btn w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-md flex items-center justify-center transition-all shadow-sm"
             title="Minimize player"
           >
             <Minimize2 className="w-4 h-4 text-zinc-300" />
           </button>
           <div className="flex items-center gap-2">
             <span className="text-sm font-black tracking-tight text-white">Vibe<span className="text-red-500">Flow</span></span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-zinc-300 font-medium hidden sm:inline-block">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-white/10 text-zinc-300 font-semibold border border-white/10 hidden sm:inline-block backdrop-blur-sm">
               Split Screen Player
             </span>
           </div>
@@ -198,7 +203,7 @@ export const NowPlayingModal: React.FC = () => {
           </span>
           <button
             onClick={() => setIsNowPlayingOpen(false)}
-            className="w-9 h-9 rounded-full bg-white/10 hover:bg-red-500/20 hover:text-red-400 text-zinc-300 flex items-center justify-center transition-all"
+            className="liquid-btn w-9 h-9 rounded-full bg-white/10 hover:bg-red-500/20 hover:text-red-400 text-zinc-300 border border-white/10 flex items-center justify-center transition-all shadow-sm"
             title="Close"
           >
             <X className="w-5 h-5" />
@@ -211,22 +216,22 @@ export const NowPlayingModal: React.FC = () => {
         {/* ========================================================= */}
         {/* LEFT PANEL — 60% WIDTH: NOW PLAYING FULL CONTROLS         */}
         {/* ========================================================= */}
-        <section className="w-full lg:w-[60%] flex flex-col justify-between px-6 sm:px-12 py-6 sm:py-8 overflow-y-auto lg:border-r border-white/10 lg:shadow-2xl min-h-0">
+        <section className="w-full lg:w-[60%] flex flex-col justify-between px-6 sm:px-12 py-6 sm:py-8 overflow-y-auto lg:border-r border-white/10 lg:shadow-2xl min-h-0 relative">
           <div className="flex-1 flex flex-col items-center justify-center max-w-xl mx-auto w-full">
             {/* Album Artwork */}
-            <div className="relative aspect-square w-full max-w-[280px] sm:max-w-[340px] md:max-w-[380px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 group mb-6 transition-all">
+            <div className="relative aspect-square w-full max-w-[280px] sm:max-w-[340px] md:max-w-[380px] rounded-3xl overflow-hidden shadow-2xl border border-white/20 group mb-6 transition-all">
               <img
                 src={artwork}
                 alt={currentTrack.title}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
               {currentTrack.source === 'jamendo' && (
-                <span className="absolute top-3.5 left-3.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-black/70 backdrop-blur-md text-amber-300 border border-amber-500/30">
+                <span className="absolute top-3.5 left-3.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-black/70 backdrop-blur-md text-amber-300 border border-amber-500/30 shadow-md">
                   Jamendo
                 </span>
               )}
               {currentTrack.source === 'youtube' && (
-                <span className="absolute top-3.5 left-3.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-red-600/90 backdrop-blur-md text-white border border-red-500/40">
+                <span className="absolute top-3.5 left-3.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-red-600/90 backdrop-blur-md text-white border border-red-500/40 shadow-md">
                   YouTube
                 </span>
               )}
@@ -245,8 +250,8 @@ export const NowPlayingModal: React.FC = () => {
 
               <button
                 onClick={toggleLikeCurrentTrack}
-                className={`p-3 rounded-full bg-white/5 hover:bg-white/10 backdrop-blur-md transition-all shrink-0 ${
-                  currentTrack.isLiked ? 'text-red-500 bg-red-500/10' : 'text-zinc-400 hover:text-white'
+                className={`liquid-btn p-3 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 backdrop-blur-md transition-all shrink-0 shadow-sm ${
+                  currentTrack.isLiked ? 'text-red-500 bg-red-500/15 border-red-500/30' : 'text-zinc-400 hover:text-white'
                 }`}
                 title={currentTrack.isLiked ? 'Unlike' : 'Like'}
               >
@@ -264,9 +269,9 @@ export const NowPlayingModal: React.FC = () => {
                   step={0.1}
                   value={currentTime}
                   onChange={(e) => seekTo(parseFloat(e.target.value))}
-                  className="w-full h-1.5 bg-white/20 rounded-full cursor-pointer appearance-none accent-red-500"
+                  className="w-full h-1.5 bg-white/20 rounded-full cursor-pointer appearance-none"
                   style={{
-                    background: `linear-gradient(to right, #ef4444 ${progressPercent}%, rgba(255,255,255,0.2) ${progressPercent}%)`,
+                    background: `linear-gradient(to right, #ef4444 ${progressPercent}%, rgba(255,255,255,0.15) ${progressPercent}%)`,
                   }}
                 />
               </div>
@@ -280,20 +285,20 @@ export const NowPlayingModal: React.FC = () => {
             <div className="w-full flex items-center justify-between mt-4 px-2 sm:px-6">
               <button
                 onClick={toggleShuffle}
-                className={`p-2 transition-colors relative ${
-                  shuffle ? 'text-red-500' : 'text-zinc-400 hover:text-white'
+                className={`liquid-btn p-2.5 rounded-full transition-all relative ${
+                  shuffle ? 'text-red-500 bg-red-500/15 border border-red-500/20' : 'text-zinc-400 hover:text-white hover:bg-white/10'
                 }`}
                 title="Shuffle"
               >
                 <Shuffle className="w-5 h-5 sm:w-6 sm:h-6" />
                 {shuffle && (
-                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-red-500 rounded-full" />
+                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-red-500 rounded-full shadow-[0_0_6px_rgba(239,68,68,0.8)]" />
                 )}
               </button>
 
               <button
                 onClick={prevTrack}
-                className="p-3 text-zinc-300 hover:text-white hover:scale-110 active:scale-95 transition-all"
+                className="liquid-btn p-3 rounded-full text-zinc-300 hover:text-white hover:bg-white/10 transition-all"
                 title="Previous"
               >
                 <SkipBack className="w-6 h-6 sm:w-7 sm:h-7 fill-current" />
@@ -301,7 +306,7 @@ export const NowPlayingModal: React.FC = () => {
 
               <button
                 onClick={togglePlay}
-                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-500 hover:bg-red-400 text-white flex items-center justify-center shadow-xl shadow-red-500/30 hover:scale-105 active:scale-95 transition-all"
+                className="liquid-btn w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-tr from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 text-white flex items-center justify-center shadow-2xl shadow-red-500/40 border-t border-white/40 transition-all"
                 title={isPlaying ? 'Pause' : 'Play'}
               >
                 {isPlaying ? (
@@ -313,7 +318,7 @@ export const NowPlayingModal: React.FC = () => {
 
               <button
                 onClick={nextTrack}
-                className="p-3 text-zinc-300 hover:text-white hover:scale-110 active:scale-95 transition-all"
+                className="liquid-btn p-3 rounded-full text-zinc-300 hover:text-white hover:bg-white/10 transition-all"
                 title="Next"
               >
                 <SkipForward className="w-6 h-6 sm:w-7 sm:h-7 fill-current" />
@@ -321,8 +326,8 @@ export const NowPlayingModal: React.FC = () => {
 
               <button
                 onClick={toggleRepeat}
-                className={`p-2 transition-colors relative ${
-                  repeat !== 'off' ? 'text-red-500' : 'text-zinc-400 hover:text-white'
+                className={`liquid-btn p-2.5 rounded-full transition-all relative ${
+                  repeat !== 'off' ? 'text-red-500 bg-red-500/15 border border-red-500/20' : 'text-zinc-400 hover:text-white hover:bg-white/10'
                 }`}
                 title={`Repeat: ${repeat}`}
               >
@@ -332,14 +337,15 @@ export const NowPlayingModal: React.FC = () => {
                   <Repeat className="w-5 h-5 sm:w-6 sm:h-6" />
                 )}
                 {repeat !== 'off' && (
-                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-red-500 rounded-full" />
+                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-red-500 rounded-full shadow-[0_0_6px_rgba(239,68,68,0.8)]" />
                 )}
               </button>
             </div>
 
             {/* Volume Control Bar */}
-            <div className="w-full flex items-center justify-center gap-3 mt-6 px-4 py-2 bg-white/5 backdrop-blur-md rounded-2xl border border-white/5 max-w-xs">
-              <button onClick={toggleMute} className="text-zinc-400 hover:text-white transition-colors">
+            <div className="w-full flex items-center justify-center gap-3 mt-6 px-4 py-2 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10 max-w-xs shadow-lg relative overflow-hidden">
+              <div className="liquid-specular-top" />
+              <button onClick={toggleMute} className="liquid-btn text-zinc-400 hover:text-white transition-colors">
                 {isMuted || volume === 0 ? (
                   <VolumeX className="w-4 h-4 sm:w-5 sm:h-5 text-red-400" />
                 ) : (
@@ -353,9 +359,9 @@ export const NowPlayingModal: React.FC = () => {
                 step={0.01}
                 value={isMuted ? 0 : volume}
                 onChange={(e) => setVolume(parseFloat(e.target.value))}
-                className="w-40 sm:w-48 h-1.5 bg-white/20 rounded-full cursor-pointer appearance-none accent-red-500"
+                className="w-40 sm:w-48 h-1.5 bg-white/20 rounded-full cursor-pointer appearance-none"
                 style={{
-                  background: `linear-gradient(to right, #ef4444 ${volumePercent}%, rgba(255,255,255,0.2) ${volumePercent}%)`,
+                  background: `linear-gradient(to right, #ef4444 ${volumePercent}%, rgba(255,255,255,0.15) ${volumePercent}%)`,
                 }}
               />
             </div>
@@ -365,7 +371,8 @@ export const NowPlayingModal: React.FC = () => {
         {/* ========================================================= */}
         {/* RIGHT PANEL — 40% WIDTH: MUSIC BROWSING SECTION           */}
         {/* ========================================================= */}
-        <aside className="w-full lg:w-[40%] flex flex-col bg-black/40 backdrop-blur-2xl overflow-hidden min-h-0">
+        <aside className="w-full lg:w-[40%] flex flex-col bg-black/35 backdrop-blur-3xl overflow-hidden min-h-0 relative">
+          <div className="liquid-specular-top" />
           {/* Browsing Tabs & Quick Search */}
           <div className="p-4 sm:p-5 border-b border-white/10 flex flex-col gap-3 shrink-0 bg-white/[0.02]">
             {/* Search Input */}
@@ -379,12 +386,12 @@ export const NowPlayingModal: React.FC = () => {
                   setSearchQuery(e.target.value);
                   if (activeTab !== 'search') setActiveTab('search');
                 }}
-                className="w-full bg-white/10 hover:bg-white/15 focus:bg-white/20 text-xs sm:text-sm text-white placeholder-zinc-400 pl-9 pr-8 py-2 rounded-xl border border-white/10 focus:border-red-500 focus:outline-none transition-all shadow-inner"
+                className="w-full bg-white/10 hover:bg-white/15 focus:bg-white/20 text-xs sm:text-sm text-white placeholder-zinc-400 pl-9 pr-8 py-2 rounded-xl border border-white/15 focus:border-red-500 focus:outline-none transition-all shadow-inner backdrop-blur-md"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                  className="liquid-btn absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -398,7 +405,7 @@ export const NowPlayingModal: React.FC = () => {
                   <button
                     key={i}
                     onClick={() => setSearchQuery(kw)}
-                    className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-white/10 hover:bg-red-500 text-zinc-300 hover:text-white transition-all whitespace-nowrap shrink-0"
+                    className="liquid-btn px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/10 hover:bg-red-500 text-zinc-300 hover:text-white transition-all whitespace-nowrap shrink-0 border border-white/10"
                   >
                     {kw}
                   </button>
@@ -407,13 +414,13 @@ export const NowPlayingModal: React.FC = () => {
             )}
 
             {/* Browsing Navigation Tabs */}
-            <div className="flex items-center gap-1.5 bg-black/40 p-1 rounded-xl border border-white/5">
+            <div className="flex items-center gap-1.5 bg-black/50 p-1.5 rounded-2xl border border-white/10">
               <button
                 onClick={() => setActiveTab('recommended')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`liquid-btn flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   activeTab === 'recommended'
-                    ? 'bg-red-500 text-white shadow-md'
-                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                    ? 'bg-gradient-to-tr from-red-600 to-rose-500 text-white shadow-md border-t border-white/30'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/10'
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5" />
@@ -422,10 +429,10 @@ export const NowPlayingModal: React.FC = () => {
 
               <button
                 onClick={() => setActiveTab('recent')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`liquid-btn flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   activeTab === 'recent'
-                    ? 'bg-red-500 text-white shadow-md'
-                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                    ? 'bg-gradient-to-tr from-red-600 to-rose-500 text-white shadow-md border-t border-white/30'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/10'
                 }`}
               >
                 <Radio className="w-3.5 h-3.5" />
@@ -434,10 +441,10 @@ export const NowPlayingModal: React.FC = () => {
 
               <button
                 onClick={() => setActiveTab('queue')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`liquid-btn flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   activeTab === 'queue'
-                    ? 'bg-red-500 text-white shadow-md'
-                    : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                    ? 'bg-gradient-to-tr from-red-600 to-rose-500 text-white shadow-md border-t border-white/30'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/10'
                 }`}
               >
                 <ListMusic className="w-3.5 h-3.5" />
