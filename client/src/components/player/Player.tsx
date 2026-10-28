@@ -17,7 +17,7 @@ import {
   Maximize2,
 } from 'lucide-react';
 import { usePlayerStore } from '../../store/usePlayerStore';
-import { formatTime } from '../../utils/format';
+import { formatTime, cleanSongTitle, cleanArtistName } from '../../utils/format';
 
 export const Player: React.FC = () => {
   const {
@@ -103,13 +103,13 @@ export const Player: React.FC = () => {
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-1.5">
               <span className="text-xs md:text-sm font-bold text-slate-900 dark:text-white truncate">
-                {currentTrack.title}
+                {cleanSongTitle(currentTrack.title)}
               </span>
               <Maximize2 className="w-3.5 h-3.5 text-zinc-400 opacity-0 group-hover/track:opacity-100 transition-opacity shrink-0" />
             </div>
             {currentTrack.artist && (
               <span className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate font-medium">
-                {currentTrack.artist.name}
+                {cleanArtistName(currentTrack.artist.name, currentTrack.title)}
               </span>
             )}
           </div>

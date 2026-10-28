@@ -50,7 +50,7 @@ export const Sidebar: React.FC = () => {
 
   return (
     <>
-      <aside className="w-64 h-full flex flex-col p-3 gap-3 select-none shrink-0 transition-colors bg-transparent">
+      <aside className="w-64 h-full flex flex-col p-3 gap-3 select-none shrink-0 transition-colors bg-transparent overflow-hidden">
         {/* Top Section: Frosted Liquid Glass */}
         <div className="relative overflow-hidden bg-white/70 dark:bg-[#11131c]/65 backdrop-blur-2xl rounded-3xl p-4 flex flex-col gap-4 border border-white/60 dark:border-white/10 shadow-lg">
           {/* Specular top reflection */}

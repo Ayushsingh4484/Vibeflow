@@ -28,7 +28,8 @@ export const trackService = {
 
   unlikeTrack: (id: string) => apiClient.delete<{ success: boolean; isLiked: boolean }>(`/tracks/${id}/like`),
 
-  recordPlay: (id: string) => apiClient.post<{ success: boolean }>(`/tracks/${id}/play`),
+  recordPlay: (id: string, trackData?: Partial<Track>) =>
+    apiClient.post<{ success: boolean }>(`/tracks/${id}/play`, trackData),
 
   getRecentlyPlayed: () => apiClient.get<{ tracks: Track[] }>('/users/recently-played'),
 

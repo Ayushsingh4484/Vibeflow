@@ -172,7 +172,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => {
 
     playLogTimer = setTimeout(() => {
       if (playLoggedTrackId === track.id) {
-        trackService.recordPlay(track.id).catch(() => {});
+        trackService.recordPlay(track.id, track).catch(() => {});
       }
     }, 4000);
   };

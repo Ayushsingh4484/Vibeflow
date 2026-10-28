@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Play, Pause, Heart, MoreHorizontal, Plus, ListPlus, Trash2, ExternalLink } from 'lucide-react';
 import { Track } from '../../types';
-import { formatTime } from '../../utils/format';
+import { formatTime, cleanSongTitle, cleanArtistName } from '../../utils/format';
 import { usePlayerStore } from '../../store/usePlayerStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useToastStore } from '../../store/useToastStore';
@@ -124,7 +124,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
         <div className="flex flex-col min-w-0">
           <div className="flex items-center gap-1.5">
             <span className={`truncate font-semibold ${isCurrent ? 'text-red-500 font-bold' : 'text-slate-900 dark:text-white'}`}>
-              {track.title}
+              {cleanSongTitle(track.title)}
             </span>
             {isJamendo && (
               <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-600 dark:text-amber-300 font-extrabold border border-amber-500/30 backdrop-blur-sm shrink-0">
@@ -143,7 +143,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
               onClick={(e) => e.stopPropagation()}
               className="text-xs text-zinc-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors truncate font-medium"
             >
-              {track.artist.name}
+              {cleanArtistName(track.artist.name, track.title)}
             </Link>
           )}
         </div>

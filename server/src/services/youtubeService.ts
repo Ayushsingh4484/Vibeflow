@@ -1,4 +1,5 @@
 import { ENV } from '../config/env';
+import { cleanTrackMetadata } from '../utils/cleanTrackMetadata';
 
 export interface YouTubeTrack {
   id: string;
@@ -113,13 +114,17 @@ export class YouTubeService {
 
       const tracks: YouTubeTrack[] = data.items.map((item: any) => {
         const videoId = item.id?.videoId || '';
-        const title = (item.snippet?.title || 'YouTube Music')
+        const rawTitle = (item.snippet?.title || 'YouTube Music')
           .replace(/&amp;/g, '&')
           .replace(/&quot;/g, '"')
           .replace(/&#39;/g, "'");
-        const channelTitle = (item.snippet?.channelTitle || 'Artist')
+        const rawChannel = (item.snippet?.channelTitle || 'Artist')
           .replace(/&amp;/g, '&')
           .replace(/&#39;/g, "'");
+
+        const cleanedMeta = cleanTrackMetadata(rawTitle, rawChannel);
+        const title = cleanedMeta.title;
+        const artistName = cleanedMeta.artist;
 
         const thumbnail =
           item.snippet?.thumbnails?.high?.url ||
@@ -139,12 +144,12 @@ export class YouTubeService {
           youtubeId: videoId,
           artist: {
             id: `yt-artist-${item.snippet?.channelId || videoId}`,
-            name: channelTitle,
+            name: artistName,
             imageUrl: thumbnail,
           },
           album: {
             id: `yt-album-${videoId}`,
-            title: channelTitle,
+            title: artistName,
             coverUrl: thumbnail,
           },
         };
@@ -183,13 +188,17 @@ export class YouTubeService {
 
       const tracks: YouTubeTrack[] = data.items.map((item: any) => {
         const videoId = item.id || '';
-        const title = (item.snippet?.title || 'Trending Song')
+        const rawTitle = (item.snippet?.title || 'Trending Song')
           .replace(/&amp;/g, '&')
           .replace(/&quot;/g, '"')
           .replace(/&#39;/g, "'");
-        const channelTitle = (item.snippet?.channelTitle || 'Artist')
+        const rawChannel = (item.snippet?.channelTitle || 'Artist')
           .replace(/&amp;/g, '&')
           .replace(/&#39;/g, "'");
+
+        const cleanedMeta = cleanTrackMetadata(rawTitle, rawChannel);
+        const title = cleanedMeta.title;
+        const artistName = cleanedMeta.artist;
 
         const thumbnail =
           item.snippet?.thumbnails?.high?.url ||
@@ -214,12 +223,12 @@ export class YouTubeService {
           playCount,
           artist: {
             id: `yt-artist-${item.snippet?.channelId || videoId}`,
-            name: channelTitle,
+            name: artistName,
             imageUrl: thumbnail,
           },
           album: {
             id: `yt-album-${videoId}`,
-            title: channelTitle,
+            title: artistName,
             coverUrl: thumbnail,
           },
         };
@@ -311,13 +320,17 @@ export class YouTubeService {
         .filter((item: any) => item.contentDetails?.videoId)
         .map((item: any) => {
           const videoId = item.contentDetails?.videoId || '';
-          const title = (item.snippet?.title || 'Track')
+          const rawTitle = (item.snippet?.title || 'Track')
             .replace(/&amp;/g, '&')
             .replace(/&quot;/g, '"')
             .replace(/&#39;/g, "'");
-          const channelTitle = (item.snippet?.channelTitle || 'Artist')
+          const rawChannel = (item.snippet?.channelTitle || 'Artist')
             .replace(/&amp;/g, '&')
             .replace(/&#39;/g, "'");
+
+          const cleanedMeta = cleanTrackMetadata(rawTitle, rawChannel);
+          const title = cleanedMeta.title;
+          const artistName = cleanedMeta.artist;
 
           const thumbnail =
             item.snippet?.thumbnails?.high?.url ||
@@ -338,12 +351,12 @@ export class YouTubeService {
             playCount: 10000,
             artist: {
               id: `yt-artist-${item.snippet?.channelId || videoId}`,
-              name: channelTitle,
+              name: artistName,
               imageUrl: thumbnail,
             },
             album: {
               id: `yt-playlist-${cleanPid}`,
-              title: item.snippet?.channelTitle || 'Playlist',
+              title: artistName,
               coverUrl: thumbnail,
             },
           };
@@ -355,5 +368,133 @@ export class YouTubeService {
       console.warn('[YouTubeService] Error fetching playlist tracks:', err.message);
       return [];
     }
+  }
+
+  /**
+   * Get real track metadata for a specific YouTube video ID
+   */
+  public static async getTrackById(videoIdOrTrackId: string): Promise<YouTubeTrack | null> {
+    const videoId = videoIdOrTrackId.replace(/^yt-/, '').trim();
+    if (!videoId) return null;
+
+    const cacheKey = `yt_track_${videoId}`;
+    const cached = getCache<YouTubeTrack>(cacheKey);
+    if (cached) return cached;
+
+    const apiKey = ENV.YT_API_KEY;
+
+    // 1. Try official YouTube Data API v3 if API key is present
+    if (apiKey) {
+      try {
+        const url = `${this.BASE_URL}/videos?part=snippet,contentDetails,statistics&id=${encodeURIComponent(videoId)}&key=${apiKey}`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.items && data.items.length > 0) {
+            const item = data.items[0];
+            const rawTitle = (item.snippet?.title || 'YouTube Music')
+              .replace(/&amp;/g, '&')
+              .replace(/&quot;/g, '"')
+              .replace(/&#39;/g, "'");
+            const rawChannel = (item.snippet?.channelTitle || 'Artist')
+              .replace(/&amp;/g, '&')
+              .replace(/&#39;/g, "'");
+
+            const cleanedMeta = cleanTrackMetadata(rawTitle, rawChannel);
+            const title = cleanedMeta.title;
+            const artistName = cleanedMeta.artist;
+
+            const thumbnail =
+              item.snippet?.thumbnails?.maxres?.url ||
+              item.snippet?.thumbnails?.high?.url ||
+              item.snippet?.thumbnails?.medium?.url ||
+              `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+
+            const duration = parseDurationISO(item.contentDetails?.duration);
+            const playCount = item.statistics?.viewCount ? parseInt(item.statistics.viewCount, 10) : 50000;
+
+            const track: YouTubeTrack = {
+              id: `yt-${videoId}`,
+              source: 'youtube',
+              title,
+              audioUrl: `https://www.youtube.com/watch?v=${videoId}`,
+              coverUrl: thumbnail,
+              artworkUrl: thumbnail,
+              duration,
+              genre: 'YouTube Music',
+              youtubeId: videoId,
+              playCount,
+              artist: {
+                id: `yt-artist-${item.snippet?.channelId || videoId}`,
+                name: artistName,
+                imageUrl: thumbnail,
+              },
+              album: {
+                id: `yt-album-${videoId}`,
+                title: artistName,
+                coverUrl: thumbnail,
+              },
+            };
+
+            setCache(cacheKey, track, 60 * 60 * 1000); // 1 hour cache
+            return track;
+          }
+        }
+      } catch (err: any) {
+        console.warn(`[YouTubeService] API getTrackById failed for ${videoId}:`, err.message);
+      }
+    }
+
+    // 2. Reliable oEmbed fallback (Works without API key / quota limits)
+    try {
+      const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
+      const res = await fetch(oembedUrl);
+      if (res.ok) {
+        const oembed = await res.json();
+        const rawTitle = (oembed.title || 'YouTube Music')
+          .replace(/&amp;/g, '&')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'");
+        const authorName = (oembed.author_name || 'YouTube Artist')
+          .replace(/&amp;/g, '&')
+          .replace(/&#39;/g, "'");
+
+        const cleanedMeta = cleanTrackMetadata(rawTitle, authorName);
+        const title = cleanedMeta.title;
+        const artistName = cleanedMeta.artist;
+
+        const thumbnail = oembed.thumbnail_url || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+
+        const track: YouTubeTrack = {
+          id: `yt-${videoId}`,
+          source: 'youtube',
+          title,
+          audioUrl: `https://www.youtube.com/watch?v=${videoId}`,
+          coverUrl: thumbnail,
+          artworkUrl: thumbnail,
+          duration: 210,
+          genre: 'YouTube Music',
+          youtubeId: videoId,
+          playCount: 15000,
+          artist: {
+            id: `yt-artist-${videoId}`,
+            name: artistName,
+            imageUrl: thumbnail,
+          },
+          album: {
+            id: `yt-album-${videoId}`,
+            title: artistName,
+            coverUrl: thumbnail,
+          },
+        };
+
+        setCache(cacheKey, track, 60 * 60 * 1000);
+        return track;
+      }
+    } catch (oembedErr: any) {
+      console.warn(`[YouTubeService] oEmbed getTrackById failed for ${videoId}:`, oembedErr.message);
+    }
+
+    return null;
   }
 }

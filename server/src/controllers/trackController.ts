@@ -6,29 +6,71 @@ import { StorageService, AUDIO_DIR } from '../services/storageService';
 import { JamendoService } from '../services/jamendoService';
 import { YouTubeService } from '../services/youtubeService';
 import { RecommendationService } from '../services/recommendationService';
+import { cleanTrackMetadata } from '../utils/cleanTrackMetadata';
 
-// Helper to ensure a Jamendo track exists in the DB for relational likes/playlists/history
+// Helper to ensure an external (YouTube/Jamendo) track exists in DB with full real metadata
 async function ensureTrackExists(trackId: string, trackData?: any) {
   let coverUrl = trackData?.artworkUrl || trackData?.coverUrl || null;
 
-  let existing = await prisma.track.findUnique({ where: { id: trackId } });
-  if (existing) {
+  let existing = await prisma.track.findUnique({
+    where: { id: trackId },
+    include: { artist: true },
+  });
+
+  const isDummy = existing && (
+    existing.title === 'YouTube Song' ||
+    existing.title === 'Jamendo Track' ||
+    existing.artist?.name === 'YouTube Artist' ||
+    existing.artist?.name === 'Jamendo Artist'
+  );
+
+  if (existing && !isDummy) {
     if ((!existing.coverUrl || existing.coverUrl.includes('width=300')) && coverUrl) {
       existing = await prisma.track.update({
         where: { id: trackId },
         data: { coverUrl },
+        include: { artist: true },
       });
     }
     return existing;
   }
 
-  let title = trackData?.title || (trackId.startsWith('yt-') ? 'YouTube Song' : 'Jamendo Track');
-  let artistName = trackData?.artist?.name || trackData?.artistName || (trackId.startsWith('yt-') ? 'YouTube Artist' : 'Jamendo Artist');
+  let title = (trackData?.title && trackData.title !== 'YouTube Song' && trackData.title !== 'Jamendo Track')
+    ? String(trackData.title).trim()
+    : '';
+  let artistName = (trackData?.artist?.name && trackData.artist.name !== 'YouTube Artist')
+    ? String(trackData.artist.name).trim()
+    : (trackData?.artistName && trackData.artistName !== 'YouTube Artist' ? String(trackData.artistName).trim() : '');
   let audioUrl = trackData?.audioUrl || (trackId.startsWith('yt-') ? `https://www.youtube.com/watch?v=${trackId.replace(/^yt-/, '')}` : '');
   let duration = trackData?.duration || 210;
-  let genre = trackData?.genre || (trackId.startsWith('yt-') ? 'YouTube' : 'Creative Commons');
+  let genre = trackData?.genre || (trackId.startsWith('yt-') ? 'YouTube Music' : 'Creative Commons');
 
-  if ((!audioUrl || !coverUrl) && trackId.startsWith('jamendo-')) {
+  // If YouTube track, fetch real title and artist if missing or placeholder
+  if (trackId.startsWith('yt-')) {
+    const vid = trackId.replace(/^yt-/, '');
+    if (!title || !artistName || title === 'YouTube Song' || artistName === 'YouTube Artist') {
+      const remoteYt = await YouTubeService.getTrackById(vid);
+      if (remoteYt) {
+        title = remoteYt.title;
+        artistName = remoteYt.artist?.name || artistName || 'Artist';
+        coverUrl = remoteYt.artworkUrl || remoteYt.coverUrl || coverUrl;
+        duration = remoteYt.duration || duration;
+        genre = remoteYt.genre || genre;
+      }
+    }
+    const cleaned = cleanTrackMetadata(title, artistName);
+    title = cleaned.title;
+    artistName = cleaned.artist;
+    if (!audioUrl) {
+      audioUrl = `https://www.youtube.com/watch?v=${vid}`;
+    }
+    if (!coverUrl) {
+      coverUrl = `https://img.youtube.com/vi/${vid}/hqdefault.jpg`;
+    }
+  }
+
+  // If Jamendo track, fetch real metadata if missing
+  if (trackId.startsWith('jamendo-') && (!title || !audioUrl || !coverUrl)) {
     const remote = await JamendoService.getTrackById(trackId);
     if (remote) {
       title = remote.title;
@@ -40,11 +82,8 @@ async function ensureTrackExists(trackId: string, trackData?: any) {
     }
   }
 
-  if (trackId.startsWith('yt-') && !coverUrl) {
-    const vid = trackId.replace(/^yt-/, '');
-    coverUrl = `https://img.youtube.com/vi/${vid}/hqdefault.jpg`;
-  }
-
+  if (!title) title = trackId.startsWith('yt-') ? 'Trending Track' : 'Music Track';
+  if (!artistName) artistName = 'Artist';
   if (!audioUrl) return null;
 
   // Find or create artist
@@ -60,7 +99,23 @@ async function ensureTrackExists(trackId: string, trackData?: any) {
     });
   }
 
-  // Create track in DB
+  // If existing record was dummy, update it with real metadata!
+  if (existing) {
+    return await prisma.track.update({
+      where: { id: trackId },
+      data: {
+        title,
+        artistId: artist.id,
+        audioUrl,
+        coverUrl: coverUrl || existing.coverUrl,
+        duration,
+        genre,
+      },
+      include: { artist: true },
+    });
+  }
+
+  // Otherwise create new track in DB
   return await prisma.track.create({
     data: {
       id: trackId,
@@ -71,6 +126,7 @@ async function ensureTrackExists(trackId: string, trackData?: any) {
       duration,
       genre,
     },
+    include: { artist: true },
   });
 }
 

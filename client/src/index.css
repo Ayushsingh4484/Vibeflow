@@ -39,11 +39,27 @@
     --nav-bg: rgba(13, 14, 20, 0.72);
   }
 
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  button, a, [role="button"], .liquid-btn {
+    touch-action: manipulation;
+  }
+
   body {
     background-color: var(--bg-main);
     color: var(--text-primary);
     font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
-    overflow-x: hidden;
     user-select: none;
     transition: background-color 0.25s var(--ease-liquid), color 0.25s var(--ease-liquid);
   }

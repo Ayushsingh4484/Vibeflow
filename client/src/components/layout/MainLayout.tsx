@@ -20,14 +20,14 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   onSearchSelect,
 }) => {
   return (
-    <div className="relative flex h-screen w-screen overflow-hidden bg-[#eef1f6] dark:bg-[#06070a] text-slate-900 dark:text-white select-none transition-colors">
+    <div className="relative flex h-full w-full overflow-hidden bg-[#eef1f6] dark:bg-[#06070a] text-slate-900 dark:text-white select-none transition-colors">
       {/* Ambient Liquid Glow Orbs (Subtle colorful refractions through frosted glass) */}
       <div className="pointer-events-none absolute -top-40 -left-40 w-96 h-96 ambient-liquid-glow-1 rounded-full opacity-60 dark:opacity-40 animate-pulse" style={{ animationDuration: '8s' }} />
       <div className="pointer-events-none absolute top-1/3 -right-32 w-[32rem] h-[32rem] ambient-liquid-glow-2 rounded-full opacity-50 dark:opacity-30" />
       <div className="pointer-events-none absolute -bottom-36 left-1/3 w-[36rem] h-[36rem] ambient-liquid-glow-3 rounded-full opacity-45 dark:opacity-25" />
 
       {/* Left Sidebar (Desktop) */}
-      <div className="hidden md:flex h-full z-10">
+      <div className="hidden md:flex h-full z-10 shrink-0 overflow-hidden">
         <Sidebar />
       </div>
 
